@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<RootNamespace>Keyfactor.Extensions.CAPlugin.GlobalSign</RootNamespace>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<Configurations>Debug;Release;DebugAndPush</Configurations>
+	</PropertyGroup>
+	<Target Name="CustomPostBuild" AfterTargets="PostBuildEvent">
+		<Exec Condition="'$(Configuration)'=='DebugAndPush' and '$(TargetFramework)'=='net8.0'" Command="PowerShell -ExecutionPolicy Bypass -File &quot;C:\Users\mkachkaev\source\repos\scripts\SyncScriptMSSL.ps1&quot;&#xA;" />
+	</Target>
+	<ItemGroup>
+		<PackageReference Include="Keyfactor.AnyGateway.IAnyCAPlugin" Version="3.0.0" />
+		<PackageReference Include="Keyfactor.Common" Version="2.5.0" />
+		<PackageReference Include="Keyfactor.Logging" Version="1.1.2" />
+		<PackageReference Include="Keyfactor.PKI" Version="6.3.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="System.Formats.Asn1" Version="6.0.1" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="6.0.5" />
+		<PackageReference Include="System.ServiceModel.Duplex" Version="6.0.0" />
+		<PackageReference Include="System.ServiceModel.Http" Version="6.2.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Update="manifest.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.ServiceModel.NetTcp" Version="6.2.0" />
+		<PackageReference Include="System.ServiceModel.Security" Version="6.0.0" />
+		<PackageReference Include="System.ServiceModel.Federation" Version="6.2.0" />
+	</ItemGroup>
+</Project>

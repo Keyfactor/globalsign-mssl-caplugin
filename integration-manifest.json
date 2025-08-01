@@ -1,12 +1,92 @@
 {
-  "$schema": "https://keyfactor.github.io/integration-manifest-schema.json",
-  "integration_type": "ca-gateway",
-  "name": "<Gateway Name Here>",
-  "status": "prototype",
-  "support_level": "community",
-  "link_github": false,
-  "update_catalog": false,
-  "description": "<Description Here>",
-  "gateway_framework": "10.x.x",
-   "release_dir": "UPDATE-THIS-WITH-PATH-TO-BINARY-BUILD-FOLDER"
+    "$schema": "https://keyfactor.github.io/integration-manifest-schema.json",
+    "integration_type": "anyca-plugin",
+    "name": "GlobalSign MSSL AnyCA REST Gateway Plugin",
+    "status": "production",
+    "support_level": "kf-supported",
+    "link_github": true,
+    "update_catalog": true,
+    "description": "GlobalSign MSSL plugin for the AnyCA REST Gateway framework",
+    "gateway_framework": "25.2.0",
+    "release_dir": "globalsign-mssl-caplugin/bin/Release/",
+    "release_project": "cscglobal-caplugin/CSCGlobalCAPlugin.csproj",
+    "about": {
+        "carest": {
+            "ca_plugin_config": [
+                {
+                    "name": "GlobalSignUsername",
+                    "description": "GlobalSign MSSL API Username"
+                },
+                {
+                    "name": "GlobalSignPassword",
+                    "description": "GlobalSign MSSL API Password"
+                },
+                {
+                    "name": "DateFormatString",
+                    "description": "Date format string. Default is yyyy-MM-ddTHH:mm:ss.fffZ"
+                },
+                {
+                    "name": "OrderAPIProdURL",
+                    "description": "MSSL Order Prod API URL. Default is https://system.globalsign.com/kb/ws/v2/ManagedSSLService"
+                },
+                {
+                    "name": "OrderAPITestURL",
+                    "description": "MSSL Order Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v2/ManagedSSLService"
+                },
+                {
+                    "name": "QueryAPIProdURL",
+                    "description": "MSSL Query Prod API URL. Default is https://system.globalsign.com/kb/ws/v1/GASService"
+                },
+                {
+                    "name": "QueryAPITestURL",
+                    "description": "MSSL Query Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v1/GASService"
+                },
+                {
+                    "name": "TestAPI",
+                    "description": "Enable the use of the test GlobalSign API endpoints. Default is false."
+                },
+                {
+                    "name": "DelayTime",
+                    "description": "This is the number of seconds between retries when attempting to download a certificate. Default is 150."
+                },
+                {
+                    "name": "RetryCount",
+                    "description": "This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5."
+                },
+                {
+                    "name": "SyncIntervalDays",
+                    "description": "OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments."
+                },
+                {
+                    "name": "SyncStartDate",
+                    "description": "If provided, full syncs will start at the specified date."
+                }
+            ],
+            "enrollment_config": [
+                {
+                    "name": "CertificateValidityInYears",
+                    "description": "Number of years the certificate will be valid for"
+                },
+                {
+                    "name": "SlotSize",
+                    "description": "Maximum number of SANs that a certificate may have - valid values are [FIVE, TEN, FIFTEEN, TWENTY, THIRTY, FOURTY, FIFTY, ONE_HUNDRED]"
+                },
+                {
+                    "name": "RootCAType",
+                    "description": "The certificate's root CA - Depending on certificate expiration date, SHA_1 not be allowed. Will default to SHA_2 if expiration date exceeds sha1 allowed date. Options are GlobalSign R certs."
+                }
+            ],
+            "product_ids": [
+                "PEV_SHA2",
+                "PEV",
+                "PV",
+                "PV_SHA2",
+                "PV_INTRA",
+                "PV_INTRA_SHA2",
+                "PV_INTRA_ECCP256",
+                "PV_CLOUD",
+                "PV_CLOUD_ECC2"
+            ]
+        }
+    }
 }

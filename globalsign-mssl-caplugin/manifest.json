@@ -1,0 +1,10 @@
+{
+  "extensions": {
+    "Keyfactor.AnyGateway.Extensions.IAnyCAPlugin": {
+      "GlobalSignCAPlugin": {
+        "assemblypath": "GlobalSignCAPlugin.dll",
+        "TypeFullName": "Keyfactor.Extensions.CAPlugin.GlobalSign.GlobalSignCAPlugin"
+      }
+    }
+  }
+}

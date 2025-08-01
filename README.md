@@ -1,93 +1,154 @@
-# cpr-cagateway-template
+<h1 align="center" style="border-bottom: none">
+    GlobalSign MSSL   Gateway AnyCA Gateway REST Plugin
+</h1>
 
-## Template for new CA Gateway integrations
+<p align="center">
+  <!-- Badges -->
+<img src="https://img.shields.io/badge/integration_status-production-3D1973?style=flat-square" alt="Integration Status: production" />
+<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Release" /></a>
+<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Issues" />
+<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin-dev/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
+</p>
 
-### Use this repository to create new integrations for new CA Gateway integration types. 
-
-
-1. [Use this repository](#using-the-repository)
-1. [Update the integration-manifest.json](#updating-the-integration-manifest.json)
-1. [Add Keyfactor Bootstrap Workflow (keyfactor-bootstrap-workflow.yml)](#add-bootstrap)
-1. [Create required branches](#create-required-branches)
-1. [Replace template files/folders](#replace-template-files-and-folders)
-1. [Create initial prerelease](#create-initial-prerelease)
----
-
-#### Using the repository
-1. Select the ```Use this template``` button at the top of this page
-1. Update the repository name following [these guidelines](https://keyfactorinc.sharepoint.com/sites/IntegrationWiki/SitePages/GitHub-Processes.aspx#repository-naming-conventions) 
-    1. All repositories must be in lower-case
-	1. General pattern: company-product-type
-	1. e.g. hashicorp-vault-orchestator
-1. Click the ```Create repository``` button
-
----
-
-#### Updating the integration-manifest.json
-
-*The following properties must be updated in the integration-manifest.json*
-
-Clone the repository locally, use vsdev.io, or the GitHub online editor to update the file.
-
-* "name": "Friendly name for the integration"
-	* This will be used in the readme file generation and catalog entries
-* "description": "Brief description of the integration."
-	* This will be used in the readme file generation
-	* If the repository description is empty this value will be used for the repository description upon creating a release branch
-* "release_dir": "PATH\\\TO\\\BINARY\\\RELEASE\\\OUTPUT\\\FOLDER"
-	* Path separators can be "\\\\" or "/"
-	* Be sure to specify the release folder name. This can be found by running a Release build and noting the output folder
-	* Example: "AzureAppGatewayOrchestrator\\bin\\Release"
-* "gateway_framework": "" string denoting the required command gateway framework version
----
-
-#### Add Bootstrap 
-Add Keyfactor Bootstrap Workflow (keyfactor-bootstrap-workflow.yml). This can be copied directly from the workflow templates or through the Actions tab
-* Directly:
-    1. Create a file named ```.github\workflows\keyfactor-bootstrap-workflow.yml``` 
-	1. Copy the contents of [keyfactor/.github/workflow-templates/keyfactor-bootstrap-workflow.yml](https://raw.githubusercontent.com/Keyfactor/.github/main/workflow-templates/keyfactor-bootstrap-workflow.yml) into the file created in the previous step
-* Actions tab:
-    1. Navigate to the [Actions tab](./actions) in the new repository
-	1. Click the ```New workflow``` button
-	1. Find the ```Keyfactor Bootstrap Workflow``` and click the ```Configure``` button
-	1. Click the ```Commit changes...``` button on this screen and the next to add the bootstrap workflow to the main branch
-	
-A new build will run the tasks of a *Push* trigger on the main branch
-
-*Ensure there are no errors during the workflow run in the Actions tab.*
-
----
-
-#### Create required branches 
-1. Create a release branch from main: release-1.0
-1. Create a dev branch from the starting with the devops id in the format ab#\<DevOps-ID>, e.g. ab#53535. 
-    1. For the cleanest pull request merge, create the dev branch from the release branch. 
-	1. Optionally, add a suffix to the branch name indicating initial release. e.g. ab#53535-initial-release
-
----
+<p align="center">
+  <!-- TOC -->
+  <a href="#support">
+    <b>Support</b>
+  </a> 
+  ·
+  <a href="#requirements">
+    <b>Requirements</b>
+  </a>
+  ·
+  <a href="#installation">
+    <b>Installation</b>
+  </a>
+  ·
+  <a href="#license">
+    <b>License</b>
+  </a>
+  ·
+  <a href="https://github.com/orgs/Keyfactor/repositories?q=anycagateway">
+    <b>Related Integrations</b>
+  </a>
+</p>
 
 
-#### Replace template files and folders
-1. Replace the contents of readme_source.md
-1. Create a CHANGELOG.md file in the root of the repository indicating ```1.0: Initial release```
-1. Replace the SampleOrchestratorExtension.sln solution file and SampleOrchestratorExtension folder with your new orchestrator dotnet solution
-1. Push your updates to the dev branch (ab#xxxxx)
+The GlobalSign CAPlugin enables the Synchronization, Enrollment, and Revocation of TLS Certificates from the GlobalSign Certificate Center.
 
----
+## Compatibility
+
+The GlobalSign MSSL   Gateway AnyCA Gateway REST plugin is compatible with the Keyfactor AnyCA Gateway REST 25.2.0 and later.
+
+## Support
+The GlobalSign MSSL   Gateway AnyCA Gateway REST plugin is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket with your Keyfactor representative. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com. 
+
+> To report a problem or suggest a new feature, use the **[Issues](../../issues)** tab. If you want to contribute actual bug fixes or proposed enhancements, use the **[Pull requests](../../pulls)** tab.
+
+## Requirements
+
+### Certificate Chain
+To enroll for certificates, the Keyfactor Command server must trust the certificate chain. After creating your Root and/or Subordinate CA, ensure the certificate chain is imported into the AnyGateway and Command Server certificate store.
+
+### API Allow List
+The GlobalSign API filters requests based on IP addresses. Ensure the appropriate IP addresses are allowed to make requests to the GlobalSign API.
+
+### Domain Point of Contact
+This extension uses the contact information of the GCC Domain point of contact for certificate enrollment. These fields are required for submission and must be populated in the Domain's point of contact section, which can be found in the GlobalSign Portal under the **Manage Domains** page.
+
+## Installation
+
+1. Install the AnyCA Gateway REST per the [official Keyfactor documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/InstallIntroduction.htm).
+
+2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases/latest) from GitHub.
+
+3. Copy the unzipped directory (usually called `net6.0` or `net8.0`) to the Extensions directory:
 
 
-#### Create initial prerelease
-1. Create a pull request from the dev branch to the release-1.0 branch
+    ```shell
+    Depending on your AnyCA Gateway REST version, copy the unzipped directory to one of the following locations:
+    Program Files\Keyfactor\AnyCA Gateway\AnyGatewayREST\net6.0\Extensions
+    Program Files\Keyfactor\AnyCA Gateway\AnyGatewayREST\net8.0\Extensions
+    ```
+
+    > The directory containing the GlobalSign MSSL   Gateway AnyCA Gateway REST plugin DLLs (`net6.0` or `net8.0`) can be named anything, as long as it is unique within the `Extensions` directory.
+
+4. Restart the AnyCA Gateway REST service.
+
+5. Navigate to the AnyCA Gateway REST portal and verify that the Gateway recognizes the GlobalSign MSSL   Gateway plugin by hovering over the ⓘ symbol to the right of the Gateway on the top left of the portal.
+
+## Configuration
+
+1. Follow the [official AnyCA Gateway REST documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) to define a new Certificate Authority, and use the notes below to configure the **Gateway Registration** and **CA Connection** tabs:
+
+    * **Gateway Registration**
+
+        GlobalSign supports the following Root certificates: [GlobalSign Root Certificates](https://support.globalsign.com/ca-certificates/root-certificates/globalsign-root-certificates).  
+        **Root_R3** is commonly used throughout MSSL. Define the root certificate you wish to use on the Gateway registration tab.  
+        Each additional Root will require a separate CA setup.
+
+    * **CA Connection**
+
+        Populate using the configuration fields collected in the [requirements](#requirements) section.
+
+        * **GlobalSignUsername** - GlobalSign MSSL API Username 
+        * **GlobalSignPassword** - GlobalSign MSSL API Password 
+        * **DateFormatString** - Date format string. Default is yyyy-MM-ddTHH:mm:ss.fffZ 
+        * **OrderAPIProdURL** - MSSL Order Prod API URL. Default is https://system.globalsign.com/kb/ws/v2/ManagedSSLService 
+        * **OrderAPITestURL** - MSSL Order Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v2/ManagedSSLService 
+        * **QueryAPIProdURL** - MSSL Query Prod API URL. Default is https://system.globalsign.com/kb/ws/v1/GASService 
+        * **QueryAPITestURL** - MSSL Query Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v1/GASService 
+        * **TestAPI** - Enable the use of the test GlobalSign API endpoints. Default is false. 
+        * **DelayTime** - This is the number of seconds between retries when attempting to download a certificate. Default is 150. 
+        * **RetryCount** - This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5. 
+        * **SyncIntervalDays** - OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments. 
+        * **SyncStartDate** - If provided, full syncs will start at the specified date. 
+
+2. Define [Certificate Profiles](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCP-Gateway.htm) and [Certificate Templates](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) for the Certificate Authority as required. One Certificate Profile must be defined per Certificate Template. It's recommended that each Certificate Profile be named after the Product ID. The GlobalSign MSSL   Gateway plugin supports the following product IDs:
+
+    * **PEV_SHA2**
+    * **PEV**
+    * **PV**
+    * **PV_SHA2**
+    * **PV_INTRA**
+    * **PV_INTRA_SHA2**
+    * **PV_INTRA_ECCP256**
+    * **PV_CLOUD**
+    * **PV_CLOUD_ECC2**
+
+3. Follow the [official Keyfactor documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Keyfactor.htm) to add each defined Certificate Authority to Keyfactor Command and import the newly defined Certificate Templates.
+
+4. In Keyfactor Command (v12.3+), for each imported Certificate Template, follow the [official documentation](https://software.keyfactor.com/Core-OnPrem/Current/Content/ReferenceGuide/Configuring%20Template%20Options.htm) to define enrollment fields for each of the following parameters:
+
+    * **CertificateValidityInYears** - Number of years the certificate will be valid for 
+    * **SlotSize** - Maximum number of SANs that a certificate may have - valid values are [FIVE, TEN, FIFTEEN, TWENTY, THIRTY, FOURTY, FIFTY, ONE_HUNDRED] 
+    * **RootCAType** - The certificate's root CA - Depending on certificate expiration date, SHA_1 not be allowed. Will default to SHA_2 if expiration date exceeds sha1 allowed date. Options are GlobalSign R certs. 
 
 
-----
+## Valid GlobalSign SAN Usage
+GlobalSign supports specific combinations of SAN types with certain products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
+Refer to the GlobalSign documentation for more information on SAN usage:  
+[GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
 
-When the repository is ready for SE Demo, change the following property:
-* "status": "pilot"
+## Enrollment Fields
 
-When the integration has been approved by Support and Delivery teams, change the following property:
-* "status": "production"
+### Required Enrollment Fields
+The following fields are required for enrollment on all certificate templates:
+- **ContactName** Set Data Type to 'string'. The name of the contact person for the certificate. This is required by the GlobalSign API.
 
-If the repository is ready to be published in the public catalog, the following properties must be updated:
-* "update_catalog": true
-* "link_github": true
+### PV_INTRA Specific Enrollment Fields
+The following fields are available for use in the enrollment of `PV_INTRA` Certificates:
+- **PrivateDomain** Set Data Type to 'string'. Set to `true` if enrolling a certificate for a private domain (e.g., `.local`, `.lab`, etc.).
+  - **If `PrivateDomain` is set to `true`, the following fields must also be specified:**
+    - **RequesterEmail** Set Data Type to 'string'. The contact email address for the enrollment. Required by the GlobalSign API.
+    - **RequesterTel:** Set Data Type to 'string'. The contact telephone number for the enrollment. Required by the GlobalSign API.
+- **InternalIP** Set Data Type to 'string'. Set to `true` if an IP SAN attached during a `PV_INTRA` certificate enrollment is a private IP address (e.g., `10.x.x.x`, `192.168.x.x`, etc.).
+
+
+## License
+
+Apache License 2.0, see [LICENSE](LICENSE).
+
+## Related Integrations
+
+See all [Keyfactor Any CA Gateways (REST)](https://github.com/orgs/Keyfactor/repositories?q=anycagateway).
