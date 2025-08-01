@@ -5,9 +5,9 @@
 <p align="center">
   <!-- Badges -->
 <img src="https://img.shields.io/badge/integration_status-production-3D1973?style=flat-square" alt="Integration Status: production" />
-<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Release" /></a>
-<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Issues" />
-<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin-dev/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
+<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin?style=flat-square" alt="Release" /></a>
+<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin?style=flat-square" alt="Issues" />
+<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
 </p>
 
 <p align="center">
@@ -60,7 +60,7 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 1. Install the AnyCA Gateway REST per the [official Keyfactor documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/InstallIntroduction.htm).
 
-2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases/latest) from GitHub.
+2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin/releases/latest) from GitHub.
 
 3. Copy the unzipped directory (usually called `net6.0` or `net8.0`) to the Extensions directory:
 
@@ -127,22 +127,21 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 ## Valid GlobalSign SAN Usage
 GlobalSign supports specific combinations of SAN types with certain products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
-Refer to the GlobalSign documentation for more information on SAN usage:  
-[GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
+Please refer to the GlobalSign documentation for more information on SAN usage:  [GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
 
 ## Enrollment Fields
 
 ### Required Enrollment Fields
 The following fields are required for enrollment on all certificate templates:
-- **ContactName** Set Data Type to 'string'. The name of the contact person for the certificate. This is required by the GlobalSign API.
+- **ContactName**: Set Data Type to 'string' when creating the field. The name of the contact person for the certificate. This is required by the GlobalSign API.
 
 ### PV_INTRA Specific Enrollment Fields
 The following fields are available for use in the enrollment of `PV_INTRA` Certificates:
-- **PrivateDomain** Set Data Type to 'string'. Set to `true` if enrolling a certificate for a private domain (e.g., `.local`, `.lab`, etc.).
-  - **If `PrivateDomain` is set to `true`, the following fields must also be specified:**
-    - **RequesterEmail** Set Data Type to 'string'. The contact email address for the enrollment. Required by the GlobalSign API.
-    - **RequesterTel:** Set Data Type to 'string'. The contact telephone number for the enrollment. Required by the GlobalSign API.
-- **InternalIP** Set Data Type to 'string'. Set to `true` if an IP SAN attached during a `PV_INTRA` certificate enrollment is a private IP address (e.g., `10.x.x.x`, `192.168.x.x`, etc.).
+- **PrivateDomain**: Set Data Type to 'string' when creating the field. Set to `true` if enrolling a certificate for a private domain (e.g., `.local`, `.lab`, etc.).
+  - **If PrivateDomain is set to `true`, the following fields must also be specified:**
+    - **RequesterEmail**: Set Data Type to 'string' when creating the field. The contact email address for the enrollment. Required by the GlobalSign API.
+    - **RequesterTel**: Set Data Type to 'string' when creating the field. The contact telephone number for the enrollment. Required by the GlobalSign API.
+- **InternalIP**: Set Data Type to 'string' when creating the field. Set to `true` if an IP SAN attached during a `PV_INTRA` certificate enrollment is a private IP address (e.g., `10.x.x.x`, `192.168.x.x`, etc.).
 
 
 ## License
