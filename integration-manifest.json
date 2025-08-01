@@ -9,7 +9,7 @@
     "description": "GlobalSign MSSL plugin for the AnyCA REST Gateway framework",
     "gateway_framework": "25.2.0",
     "release_dir": "globalsign-mssl-caplugin/bin/Release/",
-    "release_project": "cscglobal-caplugin/CSCGlobalCAPlugin.csproj",
+    "release_project": "globalsign-mssl-caplugin/GlobalSignCAPlugin.csproj",
     "about": {
         "carest": {
             "ca_plugin_config": [
