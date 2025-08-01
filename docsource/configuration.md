@@ -20,7 +20,7 @@ GlobalSign supports the following Root certificates: [GlobalSign Root Certificat
 Each additional Root will require a separate CA setup.
 
 ## Valid GlobalSign SAN Usage
-GlobalSign supports specific combinations of SAN types with certain products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
+GlobalSign supports specific combinations of SAN types with certain GlobalSign products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
 Please refer to the GlobalSign documentation for more information on SAN usage:  [GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
 
 
