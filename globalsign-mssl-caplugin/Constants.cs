@@ -21,6 +21,7 @@ internal class Constants
     public static string PICKUPDELAY = "DelayTime";
     public static string SYNCSTARTDATE = "SyncStartDate";
     public static string SYNCINTERNVALDAYS = "SyncIntervalDays";
+    public static string Enabled = "Enabled";
 }
 
 public static class EnrollmentConfigConstants

@@ -5,9 +5,9 @@
 <p align="center">
   <!-- Badges -->
 <img src="https://img.shields.io/badge/integration_status-production-3D1973?style=flat-square" alt="Integration Status: production" />
-<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin?style=flat-square" alt="Release" /></a>
-<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin?style=flat-square" alt="Issues" />
-<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
+<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Release" /></a>
+<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Issues" />
+<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin-dev/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
 </p>
 
 <p align="center">
@@ -60,7 +60,7 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 1. Install the AnyCA Gateway REST per the [official Keyfactor documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/InstallIntroduction.htm).
 
-2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin/releases/latest) from GitHub.
+2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases/latest) from GitHub.
 
 3. Copy the unzipped directory (usually called `net6.0` or `net8.0`) to the Extensions directory:
 
@@ -103,6 +103,7 @@ This extension uses the contact information of the GCC Domain point of contact f
         * **RetryCount** - This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5. 
         * **SyncIntervalDays** - OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments. 
         * **SyncStartDate** - If provided, full syncs will start at the specified date. 
+        * **Enabled** - Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available. 
 
 2. Define [Certificate Profiles](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCP-Gateway.htm) and [Certificate Templates](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) for the Certificate Authority as required. One Certificate Profile must be defined per Certificate Template. It's recommended that each Certificate Profile be named after the Product ID. The GlobalSign MSSL   Gateway plugin supports the following product IDs:
 
