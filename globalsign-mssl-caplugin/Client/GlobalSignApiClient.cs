@@ -26,6 +26,13 @@ public class GlobalSignApiClient
         Logger = logger;
         Config = config;
         // Logger = LogHandler.GetClassLogger(this.GetType());
+        var enabled =config.Enabled;
+        if (enabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
+            Logger.MethodExit();
+            return;
+        }
         QueryService = new GASV1Client
         {
             Endpoint = { Address = new EndpointAddress(config.GetUrl(GlobalSignServiceType.QUERY)), Name = "QUERY" }
