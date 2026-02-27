@@ -5,9 +5,9 @@
 <p align="center">
   <!-- Badges -->
 <img src="https://img.shields.io/badge/integration_status-production-3D1973?style=flat-square" alt="Integration Status: production" />
-<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Release" /></a>
-<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin-dev?style=flat-square" alt="Issues" />
-<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin-dev/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
+<a href="https://github.com/Keyfactor/globalsign-mssl-caplugin/releases"><img src="https://img.shields.io/github/v/release/Keyfactor/globalsign-mssl-caplugin?style=flat-square" alt="Release" /></a>
+<img src="https://img.shields.io/github/issues/Keyfactor/globalsign-mssl-caplugin?style=flat-square" alt="Issues" />
+<img src="https://img.shields.io/github/downloads/Keyfactor/globalsign-mssl-caplugin/total?style=flat-square&label=downloads&color=28B905" alt="GitHub Downloads (all assets, all releases)" />
 </p>
 
 <p align="center">
@@ -60,7 +60,7 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 1. Install the AnyCA Gateway REST per the [official Keyfactor documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/InstallIntroduction.htm).
 
-2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin-dev/releases/latest) from GitHub.
+2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin/releases/latest) from GitHub.
 
 3. Copy the unzipped directory (usually called `net6.0` or `net8.0`) to the Extensions directory:
 
