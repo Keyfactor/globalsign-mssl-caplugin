@@ -23,16 +23,24 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     private ICertificateDataReader? _certificateDataReader; 
     private ILogger Logger;
 
-    private GlobalSignCAConfig Config { get; set; } = new(); 
-
+    private GlobalSignCAConfig Config { get; set; } = new();
+    private bool _enabled = false;
 
     public void Initialize(IAnyCAPluginConfigProvider configProvider, ICertificateDataReader certificateDataReader)
     {
         Logger = LogHandler.GetClassLogger(GetType());
         Logger.MethodEntry();
+        _enabled = (bool)configProvider.CAConnectionData["Enabled"];
+        if (!_enabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
+            Logger.MethodExit();
+            return;
+        }
         Config = new GlobalSignCAConfig
         {
             IsTest = bool.Parse((string)configProvider.CAConnectionData["TestAPI"]),
+            Enabled = bool.Parse((string)configProvider.CAConnectionData["Enabled"]),
             Password = (string)configProvider.CAConnectionData["GlobalSignPassword"],
             Username = (string)configProvider.CAConnectionData["GlobalSignUsername"],
             PickupDelay = int.Parse((string)configProvider.CAConnectionData["DelayTime"]),
@@ -426,6 +434,12 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     public async Task Ping()
     {
         Logger.MethodEntry();
+        if (!_enabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
+            Logger.MethodExit();
+            return;
+        }
         try
         {
             Logger.LogInformation("Ping reqeuest recieved");
@@ -443,6 +457,19 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     {
         Logger = LogHandler.GetClassLogger(GetType());
         Logger.MethodEntry();
+        try
+        {
+            if (!(bool)connectionInfo["Enabled"])
+            {
+                Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping validation...");
+                Logger.MethodExit(LogLevel.Trace);
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError($"Exception: {LogHandler.FlattenException(ex)}");
+        }
         Config = new GlobalSignCAConfig
         {
             IsTest = bool.Parse((string)connectionInfo["TestAPI"]),
@@ -592,6 +619,13 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                 Hidden = false,
                 DefaultValue = "2000-01-01",
                 Type = "Integer"
+            },
+            [Constants.Enabled] = new()
+            {
+                Comments = "Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available.",
+                Hidden = false,
+                DefaultValue = true,
+                Type = "Boolean"
             }
         };
     }
