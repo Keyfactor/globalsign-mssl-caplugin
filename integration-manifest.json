@@ -60,6 +60,10 @@
                 {
                     "name": "SyncStartDate",
                     "description": "If provided, full syncs will start at the specified date."
+                },
+                {
+                    "name": "Enabled",
+                    "description": "Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available."
                 }
             ],
             "enrollment_config": [

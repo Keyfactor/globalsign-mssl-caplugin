@@ -103,6 +103,7 @@ This extension uses the contact information of the GCC Domain point of contact f
         * **RetryCount** - This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5. 
         * **SyncIntervalDays** - OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments. 
         * **SyncStartDate** - If provided, full syncs will start at the specified date. 
+        * **Enabled** - Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available. 
 
 2. Define [Certificate Profiles](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCP-Gateway.htm) and [Certificate Templates](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) for the Certificate Authority as required. One Certificate Profile must be defined per Certificate Template. It's recommended that each Certificate Profile be named after the Product ID. The GlobalSign MSSL   Gateway plugin supports the following product IDs:
 
