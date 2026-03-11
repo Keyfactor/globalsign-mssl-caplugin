@@ -30,8 +30,9 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     {
         Logger = LogHandler.GetClassLogger(GetType());
         Logger.MethodEntry();
-        _enabled = (bool)configProvider.CAConnectionData["Enabled"];
-        if (!_enabled)
+        var enabledValue = configProvider.CAConnectionData["Enabled"];
+        bool isEnabled = enabledValue is bool ? (bool)enabledValue : bool.Parse((string)enabledValue);
+        if (!isEnabled)
         {
             Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
             Logger.MethodExit();
@@ -40,7 +41,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
         Config = new GlobalSignCAConfig
         {
             IsTest = bool.Parse((string)configProvider.CAConnectionData["TestAPI"]),
-            Enabled = bool.Parse((string)configProvider.CAConnectionData["Enabled"]),
+            Enabled = isEnabled,
             Password = (string)configProvider.CAConnectionData["GlobalSignPassword"],
             Username = (string)configProvider.CAConnectionData["GlobalSignUsername"],
             PickupDelay = int.Parse((string)configProvider.CAConnectionData["DelayTime"]),
