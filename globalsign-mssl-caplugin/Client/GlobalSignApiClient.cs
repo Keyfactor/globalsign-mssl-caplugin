@@ -27,7 +27,7 @@ public class GlobalSignApiClient
         Config = config;
         // Logger = LogHandler.GetClassLogger(this.GetType());
         var enabled =config.Enabled;
-        if (enabled)
+        if (!enabled)
         {
             Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
             Logger.MethodExit();
