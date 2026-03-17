@@ -22,6 +22,7 @@ internal class Constants
     public static string SYNCSTARTDATE = "SyncStartDate";
     public static string SYNCINTERNVALDAYS = "SyncIntervalDays";
 	public static string SYNCPRODUCTS = "SyncProducts";
+    public static string Enabled = "Enabled";
 }
 
 public static class EnrollmentConfigConstants
