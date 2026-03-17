@@ -23,16 +23,25 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     private ICertificateDataReader? _certificateDataReader; 
     private ILogger Logger;
 
-    private GlobalSignCAConfig Config { get; set; } = new(); 
-
+    private GlobalSignCAConfig Config { get; set; } = new();
+    private bool _enabled = false;
 
     public void Initialize(IAnyCAPluginConfigProvider configProvider, ICertificateDataReader certificateDataReader)
     {
         Logger = LogHandler.GetClassLogger(GetType());
         Logger.MethodEntry();
+        var enabledValue = configProvider.CAConnectionData["Enabled"];
+        bool isEnabled = enabledValue is bool ? (bool)enabledValue : bool.Parse((string)enabledValue);
+        if (!isEnabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
+            Logger.MethodExit();
+            return;
+        }
         Config = new GlobalSignCAConfig
         {
             IsTest = bool.Parse((string)configProvider.CAConnectionData["TestAPI"]),
+            Enabled = isEnabled,
             Password = (string)configProvider.CAConnectionData["GlobalSignPassword"],
             Username = (string)configProvider.CAConnectionData["GlobalSignUsername"],
             PickupDelay = int.Parse((string)configProvider.CAConnectionData["DelayTime"]),
@@ -90,8 +99,30 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             var certs = await apiClient.GetCertificatesForSyncAsync(fullSync, syncFrom, fullSyncFrom,
                 Config.SyncIntervalDays);
 
+			bool productFilter = false;
+			List<string> products = null;
+			if (!string.IsNullOrEmpty(Config.SyncProducts))
+			{
+				products = Config.SyncProducts.Split(',').ToList();
+				products.ForEach(p => p.ToUpper());
+				productFilter = true;
+			}
+
             foreach (var c in certs)
             {
+				if (productFilter)
+				{
+					bool prodMatch = false;
+					if (c.OrderInfo?.ProductCode != null && products.Contains(c.OrderInfo.ProductCode.ToUpper()))
+					{
+						prodMatch = true;
+					}
+					if (!prodMatch)
+					{
+						Logger.LogInformation($"Found certificate with product code {c.OrderInfo?.ProductCode}, which does not match the filter criteria. Skipping.");
+						continue;
+					}
+				}
                 var orderStatus = (GlobalSignOrderStatus)Enum.Parse(typeof(GlobalSignOrderStatus),
                     c.CertificateInfo?.CertificateStatus ?? string.Empty);
                 DateTime? subDate = DateTime.TryParse(c.OrderInfo?.OrderDate, out var orderDate) ? orderDate : null;
@@ -237,6 +268,8 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             if (sanDict.TryGetValue("ipaddress", out var ipSans))
                 Logger.LogTrace($"IP SAN Count: {ipSans.Length}");
 
+			List<GetDomainsDomainDetail> matchedDomains = new List<GetDomainsDomainDetail>();
+
             // only try to resolve a domain if we don't already have a commonName
             if (string.IsNullOrWhiteSpace(commonName))
             {
@@ -247,16 +280,16 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                         if (string.IsNullOrWhiteSpace(ipSan))
                             continue;
 
-                        var tempDomain = validDomains?
-                            .FirstOrDefault(d =>
+                        var tempDomains = validDomains
+                            .Where(d =>
                                 !string.IsNullOrEmpty(d?.DomainName) &&
                                 ipSan.EndsWith($".{d.DomainName}", StringComparison.OrdinalIgnoreCase)
-                            );
+                            ).ToList();
 
-                        if (tempDomain != null)
+                        if (tempDomains != null && tempDomains.Count > 0)
                         {
                             Logger.LogDebug($"ipSAN Domain match found for ipSAN: {ipSan}");
-                            domain = tempDomain;
+                            matchedDomains = tempDomains;
                             commonName = ipSan;
                             break;
                         }
@@ -269,23 +302,23 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                         if (string.IsNullOrWhiteSpace(dnsSan))
                             continue;
 
-                        var tempDomain = validDomains?
-                            .FirstOrDefault(d =>
+                        var tempDomains = validDomains
+                            .Where(d =>
                                 !string.IsNullOrEmpty(d?.DomainName) &&
                                 dnsSan.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
-                            );
+                            ).ToList();
 
-                        if (tempDomain != null)
+                        if (tempDomains != null && tempDomains.Count > 0)
                         {
                             Logger.LogDebug($"SAN Domain match found for SAN: {dnsSan}");
-                            domain = tempDomain;
+                            matchedDomains = tempDomains;
                             commonName = dnsSan;
                             break;
                         }
                     }
             }
             // If private domain skip domain resolution.
-            if (privateDomain)
+            else if (privateDomain)
             {
                 var profiles = await apiClient.GetProfiles();
                 var fillProfile = profiles.FirstOrDefault();
@@ -302,18 +335,41 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                     }
                 };
                 domain.MSSLProfileID = fillProfile.MSSLProfileId;
+				matchedDomains = new List<GetDomainsDomainDetail> { domain };
             }
 
             // 3) Fallback: if we did obtain a commonName (or it was already set), try matching it
-            if (domain == null && !string.IsNullOrWhiteSpace(commonName))
-                domain = validDomains?
-                    .FirstOrDefault(d =>
+            else if (domain == null && !string.IsNullOrWhiteSpace(commonName))
+                matchedDomains = validDomains
+                    .Where(d =>
                         !string.IsNullOrEmpty(d?.DomainName) &&
                         commonName.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
-                    );
+                    ).ToList();
+
+			if (matchedDomains.Count == 1)
+			{
+				domain = matchedDomains[0];
+			}
+			else
+			{
+				var profId = productInfo.ProductParameters["MSSLProfileID"];
+				if (!string.IsNullOrEmpty(profId) )
+				{
+					var tempDomain = matchedDomains.Where(d =>
+														d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+					if (tempDomain != null)
+					{
+						domain = tempDomain;
+					}
+					else
+					{
+						throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
+					}
+				}
+			}
 
 
-            if (domain == null) throw new Exception("Unable to determine GlobalSign domain");
+			if (domain == null) throw new Exception("Unable to determine GlobalSign domain");
 
             
 
@@ -426,6 +482,12 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     public async Task Ping()
     {
         Logger.MethodEntry();
+        if (!_enabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping config validation and MSSL Client creation...");
+            Logger.MethodExit();
+            return;
+        }
         try
         {
             Logger.LogInformation("Ping reqeuest recieved");
@@ -443,6 +505,18 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     {
         Logger = LogHandler.GetClassLogger(GetType());
         Logger.MethodEntry();
+
+        // Handle Enabled flag - could be bool or string
+        var enabledValue = connectionInfo["Enabled"];
+        bool isEnabled = enabledValue is bool ? (bool)enabledValue : bool.Parse((string)enabledValue);
+
+        if (!isEnabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping validation...");
+            Logger.MethodExit(LogLevel.Trace);
+            return;
+        }
+
         Config = new GlobalSignCAConfig
         {
             IsTest = bool.Parse((string)connectionInfo["TestAPI"]),
@@ -455,6 +529,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             ORDER_TEST_URL = (string)connectionInfo["OrderAPITestURL"],
             QUERY_TEST_URL = (string)connectionInfo["QueryAPITestURL"],
             QUERY_PROD_URL = (string)connectionInfo["QueryAPIProdURL"],
+            Enabled = isEnabled,
             SyncStartDate = connectionInfo.TryGetValue("SyncStartDate", out object? value)
                 ? (string)value : string.Empty,
             SyncIntervalDays = connectionInfo.TryGetValue("SyncIntervalDays", out var val)
@@ -470,6 +545,17 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 
     public Task ValidateProductInfo(EnrollmentProductInfo productInfo, Dictionary<string, object> connectionInfo)
     {
+        // Handle Enabled flag - could be bool or string
+        var enabledValue = connectionInfo["Enabled"];
+        bool isEnabled = enabledValue is bool ? (bool)enabledValue : bool.Parse((string)enabledValue);
+
+        if (!isEnabled)
+        {
+            Logger.LogWarning($"The CA is currently in the Disabled state. It must be Enabled to perform operations. Skipping validation...");
+            Logger.MethodExit(LogLevel.Trace);
+            return Task.CompletedTask;
+        }
+
         Config = new GlobalSignCAConfig
         {
             IsTest = bool.Parse((string)connectionInfo["TestAPI"]),
@@ -482,6 +568,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             ORDER_TEST_URL = (string)connectionInfo["OrderAPITestURL"],
             QUERY_TEST_URL = (string)connectionInfo["QueryAPITestURL"],
             QUERY_PROD_URL = (string)connectionInfo["QueryAPIProdURL"],
+            Enabled = isEnabled,
             SyncStartDate = connectionInfo.TryGetValue("SyncStartDate", out object? value)
                 ? (string)value : string.Empty,
             SyncIntervalDays = connectionInfo.TryGetValue("SyncIntervalDays", out var val)
@@ -592,6 +679,20 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                 Hidden = false,
                 DefaultValue = "2000-01-01",
                 Type = "Integer"
+            },
+			[Constants.SYNCPRODUCTS] = new()
+			{
+				Comments = "OPTIONAL: If provided as a comma-separated list of product IDs, will limit the certificate sync to only certificates of those products. If blank or not provided, will sync all certs.",
+				Hidden = false,
+				DefaultValue = null,
+				Type = "String"
+            },
+            [Constants.Enabled] = new()
+            {
+                Comments = "Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available.",
+                Hidden = false,
+                DefaultValue = true,
+                Type = "Boolean"
             }
         };
     }
@@ -601,11 +702,11 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     {
         return new Dictionary<string, PropertyConfigInfo>
         {
-            [EnrollmentConfigConstants.CertificateValidityInYears] = new()
+            [EnrollmentConfigConstants.CertificateValidityInDays] = new()
             {
-                Comments = "Number of years the certificate will be valid for",
+                Comments = "Number of days the certificate will be valid for",
                 Hidden = false,
-                DefaultValue = "1",
+                DefaultValue = "199",
                 Type = "Number"
             },
             [EnrollmentConfigConstants.SlotSize] = new()
@@ -623,7 +724,15 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                 Hidden = false,
                 DefaultValue = "GLOBALSIGN_ROOT_R3",
                 Type = "String"
-            }
+            },
+			[EnrollmentConfigConstants.MSSLProfileId] = new()
+			{
+				Comments =
+					"OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com).",
+				Hidden = false,
+				DefaultValue = null,
+				Type = "String"
+			}
         };
     }
 
