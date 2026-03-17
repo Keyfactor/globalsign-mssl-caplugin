@@ -60,12 +60,16 @@
                 {
                     "name": "SyncStartDate",
                     "description": "If provided, full syncs will start at the specified date."
+                },
+                {
+                    "name": "SyncProducts",
+                    "description": "OPTIONAL: If provided as a comma-separated list of product IDs, will limit the certificate sync to only certificates of those products. If blank or not provided, will sync all certs."
                 }
             ],
             "enrollment_config": [
                 {
-                    "name": "CertificateValidityInYears",
-                    "description": "Number of years the certificate will be valid for"
+                    "name": "CertificateValidityInDays",
+                    "description": "Number of days the certificate will be valid for"
                 },
                 {
                     "name": "SlotSize",
@@ -74,6 +78,10 @@
                 {
                     "name": "RootCAType",
                     "description": "The certificate's root CA - Depending on certificate expiration date, SHA_1 not be allowed. Will default to SHA_2 if expiration date exceeds sha1 allowed date. Options are GlobalSign R certs."
+                },
+                {
+                    "name": "MSSLProfileId",
+                    "description": "OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com)."
                 }
             ],
             "product_ids": [
