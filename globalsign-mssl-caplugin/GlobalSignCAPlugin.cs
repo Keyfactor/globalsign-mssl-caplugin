@@ -90,8 +90,30 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             var certs = await apiClient.GetCertificatesForSyncAsync(fullSync, syncFrom, fullSyncFrom,
                 Config.SyncIntervalDays);
 
+			bool productFilter = false;
+			List<string> products = null;
+			if (!string.IsNullOrEmpty(Config.SyncProducts))
+			{
+				products = Config.SyncProducts.Split(',').ToList();
+				products.ForEach(p => p.ToUpper());
+				productFilter = true;
+			}
+
             foreach (var c in certs)
             {
+				if (productFilter)
+				{
+					bool prodMatch = false;
+					if (c.OrderInfo?.ProductCode != null && products.Contains(c.OrderInfo.ProductCode.ToUpper()))
+					{
+						prodMatch = true;
+					}
+					if (!prodMatch)
+					{
+						Logger.LogInformation($"Found certificate with product code {c.OrderInfo?.ProductCode}, which does not match the filter criteria. Skipping.");
+						continue;
+					}
+				}
                 var orderStatus = (GlobalSignOrderStatus)Enum.Parse(typeof(GlobalSignOrderStatus),
                     c.CertificateInfo?.CertificateStatus ?? string.Empty);
                 DateTime? subDate = DateTime.TryParse(c.OrderInfo?.OrderDate, out var orderDate) ? orderDate : null;
@@ -237,6 +259,8 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             if (sanDict.TryGetValue("ipaddress", out var ipSans))
                 Logger.LogTrace($"IP SAN Count: {ipSans.Length}");
 
+			List<GetDomainsDomainDetail> matchedDomains = new List<GetDomainsDomainDetail>();
+
             // only try to resolve a domain if we don't already have a commonName
             if (string.IsNullOrWhiteSpace(commonName))
             {
@@ -247,16 +271,16 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                         if (string.IsNullOrWhiteSpace(ipSan))
                             continue;
 
-                        var tempDomain = validDomains?
-                            .FirstOrDefault(d =>
+                        var tempDomains = validDomains
+                            .Where(d =>
                                 !string.IsNullOrEmpty(d?.DomainName) &&
                                 ipSan.EndsWith($".{d.DomainName}", StringComparison.OrdinalIgnoreCase)
-                            );
+                            ).ToList();
 
-                        if (tempDomain != null)
+                        if (tempDomains != null && tempDomains.Count > 0)
                         {
                             Logger.LogDebug($"ipSAN Domain match found for ipSAN: {ipSan}");
-                            domain = tempDomain;
+                            matchedDomains = tempDomains;
                             commonName = ipSan;
                             break;
                         }
@@ -269,23 +293,23 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                         if (string.IsNullOrWhiteSpace(dnsSan))
                             continue;
 
-                        var tempDomain = validDomains?
-                            .FirstOrDefault(d =>
+                        var tempDomains = validDomains
+                            .Where(d =>
                                 !string.IsNullOrEmpty(d?.DomainName) &&
                                 dnsSan.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
-                            );
+                            ).ToList();
 
-                        if (tempDomain != null)
+                        if (tempDomains != null && tempDomains.Count > 0)
                         {
                             Logger.LogDebug($"SAN Domain match found for SAN: {dnsSan}");
-                            domain = tempDomain;
+                            matchedDomains = tempDomains;
                             commonName = dnsSan;
                             break;
                         }
                     }
             }
             // If private domain skip domain resolution.
-            if (privateDomain)
+            else if (privateDomain)
             {
                 var profiles = await apiClient.GetProfiles();
                 var fillProfile = profiles.FirstOrDefault();
@@ -302,18 +326,41 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                     }
                 };
                 domain.MSSLProfileID = fillProfile.MSSLProfileId;
+				matchedDomains = new List<GetDomainsDomainDetail> { domain };
             }
 
             // 3) Fallback: if we did obtain a commonName (or it was already set), try matching it
-            if (domain == null && !string.IsNullOrWhiteSpace(commonName))
-                domain = validDomains?
-                    .FirstOrDefault(d =>
+            else if (domain == null && !string.IsNullOrWhiteSpace(commonName))
+                matchedDomains = validDomains
+                    .Where(d =>
                         !string.IsNullOrEmpty(d?.DomainName) &&
                         commonName.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
-                    );
+                    ).ToList();
+
+			if (matchedDomains.Count == 1)
+			{
+				domain = matchedDomains[0];
+			}
+			else
+			{
+				var profId = productInfo.ProductParameters["MSSLProfileID"];
+				if (!string.IsNullOrEmpty(profId) )
+				{
+					var tempDomain = matchedDomains.Where(d =>
+														d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+					if (tempDomain != null)
+					{
+						domain = tempDomain;
+					}
+					else
+					{
+						throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
+					}
+				}
+			}
 
 
-            if (domain == null) throw new Exception("Unable to determine GlobalSign domain");
+			if (domain == null) throw new Exception("Unable to determine GlobalSign domain");
 
             
 
@@ -592,7 +639,14 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                 Hidden = false,
                 DefaultValue = "2000-01-01",
                 Type = "Integer"
-            }
+            },
+			[Constants.SYNCPRODUCTS] = new()
+			{
+				Comments = "OPTIONAL: If provided as a comma-separated list of product IDs, will limit the certificate sync to only certificates of those products. If blank or not provided, will sync all certs.",
+				Hidden = false,
+				DefaultValue = null,
+				Type = "String"
+			}
         };
     }
 
@@ -601,11 +655,11 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     {
         return new Dictionary<string, PropertyConfigInfo>
         {
-            [EnrollmentConfigConstants.CertificateValidityInYears] = new()
+            [EnrollmentConfigConstants.CertificateValidityInDays] = new()
             {
-                Comments = "Number of years the certificate will be valid for",
+                Comments = "Number of days the certificate will be valid for",
                 Hidden = false,
-                DefaultValue = "1",
+                DefaultValue = "199",
                 Type = "Number"
             },
             [EnrollmentConfigConstants.SlotSize] = new()
@@ -623,7 +677,15 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                 Hidden = false,
                 DefaultValue = "GLOBALSIGN_ROOT_R3",
                 Type = "String"
-            }
+            },
+			[EnrollmentConfigConstants.MSSLProfileId] = new()
+			{
+				Comments =
+					"OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com).",
+				Hidden = false,
+				DefaultValue = null,
+				Type = "String"
+			}
         };
     }
 

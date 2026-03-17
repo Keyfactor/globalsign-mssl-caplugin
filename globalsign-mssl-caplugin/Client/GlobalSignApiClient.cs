@@ -272,11 +272,11 @@ public class GlobalSignApiClient
         Logger.MethodEntry();
         var rawRequest = enrollRequest.Request;
         Logger.LogTrace("Request details:");
-        Logger.LogTrace($"Profile ID: {enrollRequest.MsslProfileId}");
-        Logger.LogTrace($"Domain ID: {enrollRequest.MsslDomainId}");
+        Logger.LogTrace($"Profile ID: {rawRequest.MSSLProfileID}");
+        Logger.LogTrace($"Domain ID: {rawRequest.MSSLDomainID}");
         Logger.LogTrace(
-            $"Contact Info: {enrollRequest.FirstName}, {enrollRequest.LastName}, {enrollRequest.Email}, {enrollRequest.Phone}");
-        Logger.LogTrace($"SAN Count: {enrollRequest.SANs.Count()}");
+            $"Contact Info: {rawRequest.ContactInfo.FirstName}, {rawRequest.ContactInfo.LastName}, {rawRequest.ContactInfo.Email}, {rawRequest.ContactInfo.Phone}");
+        Logger.LogTrace($"SAN Count: {rawRequest.SANEntries.Count()}");
         if (rawRequest.SANEntries.Count() > 0)
             Logger.LogTrace($"SANs: {string.Join(",", rawRequest.SANEntries.Select(s => s.SubjectAltName))}");
         Logger.LogTrace($"Product Code: {rawRequest.OrderRequestParameter.ProductCode}");
@@ -284,7 +284,7 @@ public class GlobalSignApiClient
         if (!string.IsNullOrEmpty(rawRequest.OrderRequestParameter.BaseOption))
             Logger.LogTrace($"Order Base Option: {rawRequest.OrderRequestParameter.BaseOption}");
 
-        var requestwrapper = new PVOrder(enrollRequest.Request);
+        var requestwrapper = new PVOrder(rawRequest);
         var responsewrapper = await OrderService.PVOrderAsync(requestwrapper);
         ;
         var response = responsewrapper.Response;

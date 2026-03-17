@@ -32,6 +32,7 @@ public class GlobalSignCAConfig
 
     public string SyncStartDate { get; set; } = "";
     public int SyncIntervalDays { get; set; } = 0;
+	public string SyncProducts { get; set; } = "";
 
 
     public string GetUrl(GlobalSignServiceType queryType)
