@@ -86,6 +86,10 @@
                 {
                     "name": "MSSLProfileId",
                     "description": "OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com)."
+                },
+                {
+                    "name": "ContactName",
+                    "description": "The name of the contact to use for enrollments. Can be specified here or via an Enrollment Field in Command. Enrollment Fields will override any value supplied here."
                 }
             ],
             "product_ids": [
