@@ -72,8 +72,8 @@
             ],
             "enrollment_config": [
                 {
-                    "name": "CertificateValidityInDays",
-                    "description": "Number of days the certificate will be valid for"
+                    "name": "CertificateValidityInYears",
+                    "description": "Number of years the certificate will be valid for"
                 },
                 {
                     "name": "SlotSize",
