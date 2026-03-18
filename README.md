@@ -1,5 +1,5 @@
 <h1 align="center" style="border-bottom: none">
-    GlobalSign MSSL   Gateway AnyCA Gateway REST Plugin
+    GlobalSign MSSL AnyCA Gateway REST Plugin
 </h1>
 
 <p align="center">
@@ -38,10 +38,10 @@ The GlobalSign CAPlugin enables the Synchronization, Enrollment, and Revocation 
 
 ## Compatibility
 
-The GlobalSign MSSL   Gateway AnyCA Gateway REST plugin is compatible with the Keyfactor AnyCA Gateway REST 25.2.0 and later.
+The GlobalSign MSSL AnyCA Gateway REST plugin is compatible with the Keyfactor AnyCA Gateway REST 25.2.0 and later.
 
 ## Support
-The GlobalSign MSSL   Gateway AnyCA Gateway REST plugin is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket with your Keyfactor representative. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com. 
+The GlobalSign MSSL AnyCA Gateway REST plugin is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket with your Keyfactor representative. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com. 
 
 > To report a problem or suggest a new feature, use the **[Issues](../../issues)** tab. If you want to contribute actual bug fixes or proposed enhancements, use the **[Pull requests](../../pulls)** tab.
 
@@ -60,7 +60,7 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 1. Install the AnyCA Gateway REST per the [official Keyfactor documentation](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/InstallIntroduction.htm).
 
-2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL   Gateway AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin/releases/latest) from GitHub.
+2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin/releases/latest) from GitHub.
 
 3. Copy the unzipped directory (usually called `net6.0` or `net8.0`) to the Extensions directory:
 
@@ -71,11 +71,11 @@ This extension uses the contact information of the GCC Domain point of contact f
     Program Files\Keyfactor\AnyCA Gateway\AnyGatewayREST\net8.0\Extensions
     ```
 
-    > The directory containing the GlobalSign MSSL   Gateway AnyCA Gateway REST plugin DLLs (`net6.0` or `net8.0`) can be named anything, as long as it is unique within the `Extensions` directory.
+    > The directory containing the GlobalSign MSSL AnyCA Gateway REST plugin DLLs (`net6.0` or `net8.0`) can be named anything, as long as it is unique within the `Extensions` directory.
 
 4. Restart the AnyCA Gateway REST service.
 
-5. Navigate to the AnyCA Gateway REST portal and verify that the Gateway recognizes the GlobalSign MSSL   Gateway plugin by hovering over the ⓘ symbol to the right of the Gateway on the top left of the portal.
+5. Navigate to the AnyCA Gateway REST portal and verify that the Gateway recognizes the GlobalSign MSSL plugin by hovering over the ⓘ symbol to the right of the Gateway on the top left of the portal.
 
 ## Configuration
 
@@ -103,8 +103,10 @@ This extension uses the contact information of the GCC Domain point of contact f
         * **RetryCount** - This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5. 
         * **SyncIntervalDays** - OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments. 
         * **SyncStartDate** - If provided, full syncs will start at the specified date. 
+        * **SyncProducts** - OPTIONAL: If provided as a comma-separated list of product IDs, will limit the certificate sync to only certificates of those products. If blank or not provided, will sync all certs. 
+        * **Enabled** - Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available. 
 
-2. Define [Certificate Profiles](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCP-Gateway.htm) and [Certificate Templates](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) for the Certificate Authority as required. One Certificate Profile must be defined per Certificate Template. It's recommended that each Certificate Profile be named after the Product ID. The GlobalSign MSSL   Gateway plugin supports the following product IDs:
+2. Define [Certificate Profiles](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCP-Gateway.htm) and [Certificate Templates](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) for the Certificate Authority as required. One Certificate Profile must be defined per Certificate Template. It's recommended that each Certificate Profile be named after the Product ID. The GlobalSign MSSL plugin supports the following product IDs:
 
     * **PEV_SHA2**
     * **PEV**
@@ -123,6 +125,7 @@ This extension uses the contact information of the GCC Domain point of contact f
     * **CertificateValidityInYears** - Number of years the certificate will be valid for 
     * **SlotSize** - Maximum number of SANs that a certificate may have - valid values are [FIVE, TEN, FIFTEEN, TWENTY, THIRTY, FOURTY, FIFTY, ONE_HUNDRED] 
     * **RootCAType** - The certificate's root CA - Depending on certificate expiration date, SHA_1 not be allowed. Will default to SHA_2 if expiration date exceeds sha1 allowed date. Options are GlobalSign R certs. 
+    * **MSSLProfileId** - OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com). 
 
 
 ## Valid GlobalSign SAN Usage

@@ -107,7 +107,32 @@ public class GlobalSignEnrollRequest
                             continue;
                         }
 
-                        var entry = new SANEntry();
+						string trimCN = CommonName, trimItem = item;
+
+						if (CommonName.StartsWith("*."))
+						{
+							trimCN = CommonName.Substring(2).ToLower();
+							trimItem = item.ToLower();
+							List<string> equivs = new List<string> { $"*.{trimCN}", $"www.{trimCN}", $"{trimCN}" };
+							if (equivs.Contains(trimItem))
+							{
+								Logger.LogInformation($"SAN Entry {item} is equivalent to CN ignoring wildcards or www prefix, removing from request");
+								continue;
+							}
+						}
+						else if (CommonName.StartsWith("www."))
+						{
+							trimCN = CommonName.Substring(4).ToLower();
+							trimItem = item.ToLower();
+							List<string> equivs = new List<string> { $"www.{trimCN}", $"{trimCN}" };
+							if (equivs.Contains(trimItem))
+							{
+								Logger.LogInformation($"SAN Entry {item} is equivalent to CN ignoring wildcards or www prefix, removing from request");
+								continue;
+							}
+						}
+
+						var entry = new SANEntry();
                         entry.SubjectAltName = item;
                         var sb = new StringBuilder();
                         sb.Append("Adding SAN entry of type ");

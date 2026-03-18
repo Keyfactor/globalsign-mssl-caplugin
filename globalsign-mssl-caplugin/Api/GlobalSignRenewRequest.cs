@@ -53,8 +53,31 @@ public class GlobalSignRenewRequest : GlobalSignEnrollRequest
                             Logger.LogInformation($"SAN Entry {item} matches CN, removing from request");
                             continue;
                         }
+						string trimCN = CommonName, trimItem = item;
 
-                        var entry = new SANEntry();
+						if (CommonName.StartsWith("*."))
+						{
+							trimCN = CommonName.Substring(2).ToLower();
+							trimItem = item.ToLower();
+							List<string> equivs = new List<string> { $"*.{trimCN}", $"www.{trimCN}", $"{trimCN}" };
+							if (equivs.Contains(trimItem))
+							{
+								Logger.LogInformation($"SAN Entry {item} is equivalent to CN ignoring wildcards or www prefix, removing from request");
+								continue;
+							}
+						}
+						else if (CommonName.StartsWith("www."))
+						{
+							trimCN = CommonName.Substring(4).ToLower();
+							trimItem = item.ToLower();
+							List<string> equivs = new List<string> { $"www.{trimCN}", $"{trimCN}" };
+							if (equivs.Contains(trimItem))
+							{
+								Logger.LogInformation($"SAN Entry {item} is equivalent to CN ignoring wildcards or www prefix, removing from request");
+								continue;
+							}
+						}
+						var entry = new SANEntry();
                         entry.SubjectAltName = item;
                         var sb = new StringBuilder();
                         sb.Append("Adding SAN entry of type ");
