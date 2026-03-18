@@ -54,10 +54,8 @@ public class GlobalSignApiClient
         var results = new List<OrderDetail>();
         if (fullSync)
         {
-            // If startDate is before year 2000, treat it as “since the dawn of time”
-            var from = startDate > new DateTime(2000, 1, 1)
-                ? startDate
-                : DateTime.MinValue;
+			
+			var from = startDate;
             var finalStop = DateTime.UtcNow;
 
             // first window

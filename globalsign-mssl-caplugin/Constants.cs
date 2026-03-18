@@ -31,4 +31,5 @@ public static class EnrollmentConfigConstants
     public const string SlotSize = "SlotSize";
     public const string CertificateValidityInYears = "CertificateValidityInYears";
 	public const string MSSLProfileId = "MSSLProfileId";
+	public const string ContactName = "ContactName";
 }

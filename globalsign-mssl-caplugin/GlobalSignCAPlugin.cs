@@ -732,6 +732,14 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 				Hidden = false,
 				DefaultValue = null,
 				Type = "String"
+			},
+			[EnrollmentConfigConstants.ContactName] = new()
+			{
+				Comments =
+					"The name of the contact to use for enrollments. Can be specified here or via an Enrollment Field in Command. Enrollment Fields will override any value supplied here.",
+				Hidden = false,
+				DefaultValue = "",
+				Type = "String"
 			}
         };
     }
