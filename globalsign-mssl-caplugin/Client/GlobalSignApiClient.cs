@@ -79,8 +79,12 @@ public class GlobalSignApiClient
         }
         else
         {
-            // incremental sync since lastSync
+            // incremental sync since lastSync, unless lastSync is earlier than startDate, then use that
             var from = lastSync;
+			if (from < startDate)
+			{
+				from = startDate;
+			}
             var to = DateTime.UtcNow;
 
             results.AddRange(

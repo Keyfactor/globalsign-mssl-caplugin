@@ -92,7 +92,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             if (Config == null) throw new InvalidOperationException("Config is not initialized.");
             var apiClient = new GlobalSignApiClient(Config, Logger);
 
-            var fullSyncFrom = new DateTime(2000, 01, 01);
+			var fullSyncFrom = DateTime.UtcNow.AddYears(-1);
             if (!string.IsNullOrEmpty(Config.SyncStartDate)) fullSyncFrom = DateTime.Parse(Config.SyncStartDate);
 
             var syncFrom = lastSync;
@@ -677,8 +677,8 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                 Comments =
                     "If provided, full syncs will start at the specified date.",
                 Hidden = false,
-                DefaultValue = "2000-01-01",
-                Type = "Integer"
+                DefaultValue = "",
+                Type = "String"
             },
 			[Constants.SYNCPRODUCTS] = new()
 			{
