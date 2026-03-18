@@ -702,11 +702,11 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
     {
         return new Dictionary<string, PropertyConfigInfo>
         {
-            [EnrollmentConfigConstants.CertificateValidityInDays] = new()
+            [EnrollmentConfigConstants.CertificateValidityInYears] = new()
             {
-                Comments = "Number of days the certificate will be valid for",
+                Comments = "Number of years the certificate will be valid for",
                 Hidden = false,
-                DefaultValue = "199",
+                DefaultValue = 1,
                 Type = "Number"
             },
             [EnrollmentConfigConstants.SlotSize] = new()

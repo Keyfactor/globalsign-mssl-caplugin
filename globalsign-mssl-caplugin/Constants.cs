@@ -29,6 +29,6 @@ public static class EnrollmentConfigConstants
 {
     public const string RootCAType = "RootCAType";
     public const string SlotSize = "SlotSize";
-    public const string CertificateValidityInDays = "CertificateValidityInDays";
+    public const string CertificateValidityInYears = "CertificateValidityInYears";
 	public const string MSSLProfileId = "MSSLProfileId";
 }
