@@ -157,64 +157,63 @@ public class GlobalSignApiClient
             }
         };
 
-        var retryCounter = 0;
-        while (retryCounter <= Config.PickupRetries)
+        var wrapper = new GetOrderByOrderID(request);
+        var responseWrapper = await QueryService.GetOrderByOrderIDAsync(wrapper);
+        var response = responseWrapper.Response;
+
+        if (response.OrderResponseHeader.SuccessCode == 0)
         {
-            var wrapper = new GetOrderByOrderID(request);
-            var responseWrapper = await QueryService.GetOrderByOrderIDAsync(wrapper);
-            var response = responseWrapper.Response;
+            Logger.LogDebug($"Order with order ID {caRequestId} successfully picked up");
+            var orderStatus = (GlobalSignOrderStatus)Enum.Parse(
+                typeof(GlobalSignOrderStatus),
+                response.OrderDetail.CertificateInfo.CertificateStatus);
 
-            if (response.OrderResponseHeader.SuccessCode == 0)
+            if (orderStatus == GlobalSignOrderStatus.Issued)
             {
-                Logger.LogDebug($"Order with order ID {caRequestId} successfully picked up");
-                var orderStatus = (GlobalSignOrderStatus)Enum.Parse(
-                    typeof(GlobalSignOrderStatus),
-                    response.OrderDetail.CertificateInfo.CertificateStatus);
+                var orderDate = DateTime.TryParse(
+                    response.OrderDetail.OrderInfo.OrderDate,
+                    out var od)
+                    ? od
+                    : (DateTime?)null;
+                var completeDate = DateTime.TryParse(
+                    response.OrderDetail.OrderInfo.OrderCompleteDate,
+                    out var cd)
+                    ? cd
+                    : (DateTime?)null;
+                var deactivateDate = DateTime.TryParse(
+                    response.OrderDetail.OrderInfo.OrderDeactivatedDate,
+                    out var de)
+                    ? de
+                    : (DateTime?)null;
 
-                if (orderStatus == GlobalSignOrderStatus.Issued)
+                Logger.MethodExit();
+                return new AnyCAPluginCertificate
                 {
-                    var orderDate = DateTime.TryParse(
-                        response.OrderDetail.OrderInfo.OrderDate,
-                        out var od)
-                        ? od
-                        : (DateTime?)null;
-                    var completeDate = DateTime.TryParse(
-                        response.OrderDetail.OrderInfo.OrderCompleteDate,
-                        out var cd)
-                        ? cd
-                        : (DateTime?)null;
-                    var deactivateDate = DateTime.TryParse(
-                        response.OrderDetail.OrderInfo.OrderDeactivatedDate,
-                        out var de)
-                        ? de
-                        : (DateTime?)null;
-
-                    Logger.MethodExit();
-                    return new AnyCAPluginCertificate
-                    {
-                        CARequestID = caRequestId,
-                        ProductID = response.OrderDetail.OrderInfo.ProductCode,
-                        Status = OrderStatus.ConvertToKeyfactorStatus(orderStatus),
-                        CSR = response.OrderDetail.Fulfillment.OriginalCSR,
-                        Certificate = response.OrderDetail.Fulfillment.ServerCertificate.X509Cert,
-                        RevocationReason = 0,
-                        RevocationDate = orderStatus == GlobalSignOrderStatus.Revoked ? deactivateDate : null
-                    };
-                }
+                    CARequestID = caRequestId,
+                    ProductID = response.OrderDetail.OrderInfo.ProductCode,
+                    Status = OrderStatus.ConvertToKeyfactorStatus(orderStatus),
+                    CSR = response.OrderDetail.Fulfillment.OriginalCSR,
+                    Certificate = response.OrderDetail.Fulfillment.ServerCertificate.X509Cert,
+                    RevocationReason = 0,
+                    RevocationDate = orderStatus == GlobalSignOrderStatus.Revoked ? deactivateDate : null
+                };
             }
-
-            retryCounter++;
-            Logger.LogDebug(
-                $"Pickup certificate failed for order ID {caRequestId}. Attempt {retryCounter} of {Config.PickupRetries}.{(retryCounter < Config.PickupRetries ? " Retrying..." : string.Empty)}");
-            await Task.Delay(TimeSpan.FromSeconds(Config.PickupDelay));
         }
+
+        Logger.LogInformation(
+            $"Certificate for order ID {caRequestId} was not immediately available. Once issued, it should be picked up by the next gateway sync.");
+
 
         var gsError = GlobalSignErrorIndex.GetGlobalSignError(-9916);
         var errorMsg =
             "Unable to pickup certificate during configured pickup window. Check for required approvals in GlobalSign portal. This can also be caused by a delay with GlobalSign, in which case the certificate will get picked up by a future sync";
         Logger.LogError(errorMsg);
         Logger.LogError(gsError.DetailedMessage);
-        throw new Exception(errorMsg);
+		return new AnyCAPluginCertificate()
+		{
+			CARequestID = caRequestId,
+			Status = (int)EndEntityStatus.INPROCESS                 
+		};
     }
 
     public async Task<List<GetDomainsDomainDetail>> GetDomains()
@@ -418,6 +417,15 @@ public class GlobalSignApiClient
 
             // Pick up the certificate after reissue
             var pickupResponse = await PickupCertificateById(response.OrderID);
+
+			if (pickupResponse.Status == (int)EndEntityStatus.INPROCESS)
+			{
+				return new EnrollmentResult
+				{
+					CARequestID = response.OrderID,
+					Status = (int)EndEntityStatus.INPROCESS
+				};
+			}
             var cert = CertificateConverterFactory.FromPEM(pickupResponse.Certificate).ToX509Certificate2();
 
             // If newly generated or serial differs, return success
