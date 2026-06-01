@@ -1,5 +1,7 @@
 ﻿using System.Globalization;
 using System.ServiceModel;
+using System.Text;
+
 using Keyfactor.AnyGateway.Extensions;
 using Keyfactor.Extensions.CAPlugin.GlobalSign.Api;
 using Keyfactor.Logging;
@@ -86,7 +88,7 @@ public class GlobalSignApiClient
             var to = DateTime.UtcNow;
 
             results.AddRange(
-                await GetCertificatesByDateRange(from, to)
+                await GetModifiedOrdersByDateRange(from, to)
             );
         }
 
@@ -126,16 +128,64 @@ public class GlobalSignApiClient
         else
         {
             int errCode = int.Parse(allOrdersResponse.Response.QueryResponseHeader.Errors[0].ErrorCode);
-            Logger.LogError($"Unable to retrieve certificates:");
+			StringBuilder sb = new StringBuilder();
+            sb.Append($"Unable to retrieve certificates:");
             foreach (var e in allOrdersResponse.Response.QueryResponseHeader.Errors)
             {
-                Logger.LogError($"{e.ErrorCode} | {e.ErrorField} | {e.ErrorMessage}");
+                sb.Append($"\n{e.ErrorCode} | {e.ErrorField} | {e.ErrorMessage}");
             }
+			Logger.LogError(sb.ToString());
             var gsError = GlobalSignErrorIndex.GetGlobalSignError(errCode);
             Logger.LogError(gsError.DetailedMessage);
             throw new Exception(gsError.Message);
         }
     }
+
+	private async Task<List<OrderDetail>> GetModifiedOrdersByDateRange(DateTime? fromDate, DateTime? toDate)
+	{
+		var tmpFromDate = fromDate ?? DateTime.MinValue;
+		var tmpToDate = toDate ?? DateTime.UtcNow;
+
+		QbV1GetModifiedOrdersRequest req = new QbV1GetModifiedOrdersRequest
+		{
+			QueryRequestHeader = new QueryRequestHeader
+			{
+				AuthToken = Config.GetQueryAuthToken()
+			},
+			FromDate = tmpFromDate.ToString(Config.DateFormatString, DateTimeFormatInfo.InvariantInfo),
+			ToDate = tmpToDate.ToString(Config.DateFormatString, DateTimeFormatInfo.InvariantInfo),
+			OrderQueryOption = new OrderQueryOption
+			{
+				ReturnOrderOption = "true",
+				ReturnCertificateInfo = "true",
+				ReturnFulfillment = "true",
+				ReturnOriginalCSR = "true"
+			}
+		};
+		Logger.LogDebug($"Retrieving all modified orders between {tmpFromDate} and {tmpToDate}");
+		var modOrdersResponse = await QueryService.GetModifiedOrdersAsync(new GetModifiedOrders(req));
+
+		if (modOrdersResponse.Response.QueryResponseHeader.SuccessCode == 0)
+		{
+			var retVal = modOrdersResponse.Response.OrderDetails?.ToList() ?? new List<OrderDetail>();
+			Logger.LogDebug($"Retrieved {retVal.Count} modified orders from GlobalSign");
+			return retVal;
+		}
+		else
+		{
+			int errCode = int.Parse(modOrdersResponse.Response.QueryResponseHeader.Errors[0].ErrorCode);
+			StringBuilder sb = new StringBuilder();
+			sb.Append("Unable to retrieve certificates:");
+			foreach (var e in modOrdersResponse.Response.QueryResponseHeader.Errors)
+			{
+				sb.Append($"\n{e.ErrorCode} | {e.ErrorField} | {e.ErrorMessage}");
+			}
+			Logger.LogError(sb.ToString());
+			var gsError = GlobalSignErrorIndex.GetGlobalSignError(errCode);
+			Logger.LogError(gsError.DetailedMessage);
+			throw new Exception(gsError.Message);
+		}
+	}
 
     public async Task<AnyCAPluginCertificate> PickupCertificateById(string caRequestId)
     {
