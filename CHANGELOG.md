@@ -6,3 +6,4 @@ Remove retry logic around reissue pickups
 
 1.1.1  
 Change incremental sync to use GetModifiedOrders API call  
+Remove retry logic around reissue pickups
