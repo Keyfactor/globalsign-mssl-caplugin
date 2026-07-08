@@ -427,7 +427,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
                         expirationDate = localcert.RevocationDate;
                     }
 
-                    if (expirationDate < DateTime.Now) renewal = true;
+                    if (expirationDate.Value.AddDays(-30) < DateTime.Now) renewal = true; // 30 day renewal window
                     if (renewal)
                     {
                         Logger.LogDebug(
