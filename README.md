@@ -133,11 +133,14 @@ This extension uses the contact information of the GCC Domain point of contact f
 GlobalSign supports specific combinations of SAN types with certain GlobalSign products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
 Please refer to the GlobalSign documentation for more information on SAN usage:  [GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
 
-## Enrollment Fields
+## Enrollment
 
 ### Required Enrollment Fields
 The following fields are required for enrollment on all certificate templates:
 - **ContactName**: Set Data Type to 'string' when creating the field. The name of the contact person for the certificate. This is required by the GlobalSign API.
+
+### Renewal vs Reissue
+Currently, the gateway determines whether to do a renew or reissue based on the expiration date of the certificate in question. If it is within 30 days of expiration, the gateway will do a renew; otherwise, it will do a reissue.
 
 ### PV_INTRA Specific Enrollment Fields
 The following fields are available for use in the enrollment of `PV_INTRA` Certificates:
