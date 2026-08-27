@@ -270,91 +270,112 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 
 			List<GetDomainsDomainDetail> matchedDomains = new List<GetDomainsDomainDetail>();
 
-            // only try to resolve a domain if we don't already have a commonName
-            if (string.IsNullOrWhiteSpace(commonName))
-            {
-                // 1) Try IP SANs first
-                if (ipSans != null)
-                    foreach (var ipSan in ipSans)
-                    {
-                        if (string.IsNullOrWhiteSpace(ipSan))
-                            continue;
+			// only try to resolve a domain if we don't already have a commonName
+			if (string.IsNullOrWhiteSpace(commonName))
+			{
+				// 1) Try IP SANs first
+				if (ipSans != null)
+					foreach (var ipSan in ipSans)
+					{
+						if (string.IsNullOrWhiteSpace(ipSan))
+							continue;
 
-                        var tempDomains = validDomains
-                            .Where(d =>
-                                !string.IsNullOrEmpty(d?.DomainName) &&
-                                ipSan.EndsWith($".{d.DomainName}", StringComparison.OrdinalIgnoreCase)
-                            ).ToList();
+						var tempDomains = validDomains
+							.Where(d =>
+								!string.IsNullOrEmpty(d?.DomainName) &&
+								ipSan.EndsWith($".{d.DomainName}", StringComparison.OrdinalIgnoreCase)
+							).ToList();
 
-                        if (tempDomains != null && tempDomains.Count > 0)
-                        {
-                            Logger.LogDebug($"ipSAN Domain match found for ipSAN: {ipSan}");
-                            matchedDomains = tempDomains;
-                            commonName = ipSan;
-                            break;
-                        }
-                    }
+						if (tempDomains != null && tempDomains.Count > 0)
+						{
+							Logger.LogDebug($"ipSAN Domain match found for ipSAN: {ipSan}");
+							matchedDomains = tempDomains;
+							commonName = ipSan;
+							break;
+						}
+					}
 
-                // 2) If still not found, try DNS SANs
-                if (domain == null && dnsSans != null)
-                    foreach (var dnsSan in dnsSans)
-                    {
-                        if (string.IsNullOrWhiteSpace(dnsSan))
-                            continue;
+				// 2) If still not found, try DNS SANs
+				if (domain == null && dnsSans != null)
+					foreach (var dnsSan in dnsSans)
+					{
+						if (string.IsNullOrWhiteSpace(dnsSan))
+							continue;
 
-                        var tempDomains = validDomains
-                            .Where(d =>
-                                !string.IsNullOrEmpty(d?.DomainName) &&
-                                dnsSan.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
-                            ).ToList();
+						var tempDomains = validDomains
+							.Where(d =>
+								!string.IsNullOrEmpty(d?.DomainName) &&
+								dnsSan.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
+							).ToList();
 
-                        if (tempDomains != null && tempDomains.Count > 0)
-                        {
-                            Logger.LogDebug($"SAN Domain match found for SAN: {dnsSan}");
-                            matchedDomains = tempDomains;
-                            commonName = dnsSan;
-                            break;
-                        }
-                    }
-            }
-            // If private domain skip domain resolution.
-            else if (privateDomain)
-            {
-                var profiles = await apiClient.GetProfiles();
-                var fillProfile = profiles.FirstOrDefault();
-                // If PrivateDomain is true, we don't need to fully resolve a domain
-                domain = new GetDomainsDomainDetail()
-                {
-                    ContactInfo = new ContactInfoDomain()
-                    {
-                        Email = requesterEmail,
-                        Phone = requesterTel,
-                        FirstName = requestor,
-                        LastName = requestor
+						if (tempDomains != null && tempDomains.Count > 0)
+						{
+							Logger.LogDebug($"SAN Domain match found for SAN: {dnsSan}");
+							matchedDomains = tempDomains;
+							commonName = dnsSan;
+							break;
+						}
+					}
+			}
+			// If private domain skip domain resolution.
+			else if (privateDomain)
+			{
+				var profiles = await apiClient.GetProfiles();
+				var fillProfile = profiles.FirstOrDefault();
+				// If PrivateDomain is true, we don't need to fully resolve a domain
+				domain = new GetDomainsDomainDetail()
+				{
+					ContactInfo = new ContactInfoDomain()
+					{
+						Email = requesterEmail,
+						Phone = requesterTel,
+						FirstName = requestor,
+						LastName = requestor
 
-                    }
-                };
-                domain.MSSLProfileID = fillProfile.MSSLProfileId;
+					}
+				};
+				domain.MSSLProfileID = fillProfile.MSSLProfileId;
 				matchedDomains = new List<GetDomainsDomainDetail> { domain };
-            }
+			}
 
-            // 3) Fallback: if we did obtain a commonName (or it was already set), try matching it
-            else if (domain == null && !string.IsNullOrWhiteSpace(commonName))
-                matchedDomains = validDomains
-                    .Where(d =>
-                        !string.IsNullOrEmpty(d?.DomainName) &&
-                        commonName.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
-                    ).ToList();
+			// 3) Fallback: if we did obtain a commonName (or it was already set), try matching it
+			else if (domain == null && !string.IsNullOrWhiteSpace(commonName))
+			{
+				matchedDomains = validDomains
+					.Where(d =>
+						!string.IsNullOrEmpty(d?.DomainName) &&
+						commonName.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
+					).ToList();
+			}
 
 			if (matchedDomains.Count == 1)
 			{
 				domain = matchedDomains[0];
 			}
+			else if (matchedDomains.Count == 0)
+			{
+				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.AppendLine($"No domains found matching common name {commonName}\nAll domains:");
+				foreach (var dm in validDomains)
+				{
+					stringBuilder.AppendLine($"Domain: {dm.DomainName}\tProfileID: {dm.MSSLProfileID}");
+				}
+				Logger.LogTrace(stringBuilder.ToString());
+			}
 			else
 			{
-				var profId = productInfo.ProductParameters["MSSLProfileID"];
-				if (!string.IsNullOrEmpty(profId) )
+				StringBuilder sb = new StringBuilder();
+				sb.AppendLine($"Domains found matching common name {commonName}:");
+				foreach (var dom in matchedDomains)
 				{
+					sb.AppendLine($"Domain: {dom.DomainName}\tProfileID: {dom.MSSLProfileID}");
+				}
+				//Logger.LogTrace($"Multiple domains found matching common name {commonName}:\n{string.Join(',', matchedDomains.Select(d => d.DomainName))}.\nChecking for Profile ID.");
+				var profId = productInfo.ProductParameters["MSSLProfileID"];
+				if (!string.IsNullOrEmpty(profId))
+				{
+					sb.AppendLine($"Comparing ProfileID to provided MSSLProfileID: {profId}");
+					Logger.LogTrace(sb.ToString());
 					var tempDomain = matchedDomains.Where(d =>
 														d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 					if (tempDomain != null)
@@ -365,6 +386,11 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 					{
 						throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
 					}
+				}
+				else
+				{
+					sb.AppendLine("No MSSLProfileID provided, unable to determine correct domain");
+					Logger.LogTrace(sb.ToString());
 				}
 			}
 
