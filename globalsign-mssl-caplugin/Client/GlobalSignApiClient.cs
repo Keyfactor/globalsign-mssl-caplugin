@@ -262,7 +262,7 @@ public class GlobalSignApiClient
 		return new AnyCAPluginCertificate()
 		{
 			CARequestID = caRequestId,
-			Status = (int)EndEntityStatus.INPROCESS                 
+			Status = (int)EndEntityStatus.EXTERNALVALIDATION                 
 		};
     }
 
@@ -367,7 +367,7 @@ public class GlobalSignApiClient
                     return new EnrollmentResult
                     {
                         CARequestID = response.OrderID,
-                        Status = (int)EndEntityStatus.WAITINGFORADDAPPROVAL,
+                        Status = (int)EndEntityStatus.EXTERNALVALIDATION,
                         StatusMessage = "Enrollment is pending review.  Check GlobalSign Portal for more detail."
                     };
             }
@@ -428,7 +428,7 @@ public class GlobalSignApiClient
                     return new EnrollmentResult
                     {
                         CARequestID = response.OrderID,
-                        Status = (int)EndEntityStatus.WAITINGFORADDAPPROVAL,
+                        Status = (int)EndEntityStatus.EXTERNALVALIDATION,
                         StatusMessage = "Enrollment is pending review.  Check GlobalSign Portal for more detail."
                     };
             }
@@ -468,12 +468,12 @@ public class GlobalSignApiClient
             // Pick up the certificate after reissue
             var pickupResponse = await PickupCertificateById(response.OrderID);
 
-			if (pickupResponse.Status == (int)EndEntityStatus.INPROCESS)
+			if (pickupResponse.Status == (int)EndEntityStatus.EXTERNALVALIDATION)
 			{
 				return new EnrollmentResult
 				{
 					CARequestID = response.OrderID,
-					Status = (int)EndEntityStatus.INPROCESS
+					Status = (int)EndEntityStatus.EXTERNALVALIDATION
 				};
 			}
             var cert = CertificateConverterFactory.FromPEM(pickupResponse.Certificate).ToX509Certificate2();
