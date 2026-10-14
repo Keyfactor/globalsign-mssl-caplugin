@@ -23,6 +23,7 @@ internal class Constants
     public static string SYNCINTERNVALDAYS = "SyncIntervalDays";
 	public static string SYNCPRODUCTS = "SyncProducts";
     public static string Enabled = "Enabled";
+	public static string DNS_VALIDATION_ENABLED = "DnsValidationEnabled";
 }
 
 public static class EnrollmentConfigConstants
