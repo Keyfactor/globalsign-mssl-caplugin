@@ -36,6 +36,9 @@ public class GlobalSignCAConfig
 
     public bool Enabled { get; set; } = true;
 
+	public bool DnsValidationEnabled { get; set; }
+
+
     public string GetUrl(GlobalSignServiceType queryType)
     {
         switch (queryType)
