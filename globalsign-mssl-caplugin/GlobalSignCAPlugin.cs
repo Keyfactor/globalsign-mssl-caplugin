@@ -246,7 +246,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             GetDomainsDomainDetail? domain = null;
             var allDomains = await apiClient.GetDomains();
             var validDomainStatus = new List<string> { "3", "7", "9", "10" };
-            //var validDomains = allDomains.Where(d => validDomainStatus.Contains(d.DomainStatus)).ToList();
+            var validDomains = allDomains.Where(d => validDomainStatus.Contains(d.DomainStatus)).ToList();
             //if (validDomains.Count == 0 && !privateDomain)
             //    throw new Exception("No domains found that are valid for certificate enrollment");
             try
@@ -372,33 +372,42 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 			}
 			else
 			{
-				StringBuilder sb = new StringBuilder();
-				sb.AppendLine($"Domains found matching common name {commonName}:");
-				foreach (var dom in matchedDomains)
+				var validMatchedDomains = matchedDomains.FindAll(d => validDomains.Contains(d)).ToList();
+				matchedDomains = validMatchedDomains;
+				if (matchedDomains.Count == 1)
 				{
-					sb.AppendLine($"Domain: {dom.DomainName}\tProfileID: {dom.MSSLProfileID}");
-				}
-				//Logger.LogTrace($"Multiple domains found matching common name {commonName}:\n{string.Join(',', matchedDomains.Select(d => d.DomainName))}.\nChecking for Profile ID.");
-				var profId = productInfo.ProductParameters["MSSLProfileID"];
-				if (!string.IsNullOrEmpty(profId))
-				{
-					sb.AppendLine($"Comparing ProfileID to provided MSSLProfileID: {profId}");
-					Logger.LogTrace(sb.ToString());
-					var tempDomain = matchedDomains.Where(d =>
-														d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-					if (tempDomain != null)
-					{
-						domain = tempDomain;
-					}
-					else
-					{
-						throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
-					}
+					domain = matchedDomains[0];
 				}
 				else
 				{
-					sb.AppendLine("No MSSLProfileID provided, unable to determine correct domain");
-					Logger.LogTrace(sb.ToString());
+					StringBuilder sb = new StringBuilder();
+					sb.AppendLine($"Domains found matching common name {commonName}:");
+					foreach (var dom in matchedDomains)
+					{
+						sb.AppendLine($"Domain: {dom.DomainName}\tProfileID: {dom.MSSLProfileID}");
+					}
+					//Logger.LogTrace($"Multiple domains found matching common name {commonName}:\n{string.Join(',', matchedDomains.Select(d => d.DomainName))}.\nChecking for Profile ID.");
+					var profId = productInfo.ProductParameters["MSSLProfileID"];
+					if (!string.IsNullOrEmpty(profId))
+					{
+						sb.AppendLine($"Comparing ProfileID to provided MSSLProfileID: {profId}");
+						Logger.LogTrace(sb.ToString());
+						var tempDomain = matchedDomains.Where(d =>
+															d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+						if (tempDomain != null)
+						{
+							domain = tempDomain;
+						}
+						else
+						{
+							throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
+						}
+					}
+					else
+					{
+						sb.AppendLine("No MSSLProfileID provided, unable to determine correct domain");
+						Logger.LogTrace(sb.ToString());
+					}
 				}
 			}
 
