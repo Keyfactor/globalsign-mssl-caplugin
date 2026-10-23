@@ -14,7 +14,7 @@
   <!-- TOC -->
   <a href="#support">
     <b>Support</b>
-  </a> 
+  </a>
   ·
   <a href="#requirements">
     <b>Requirements</b>
@@ -33,7 +33,6 @@
   </a>
 </p>
 
-
 The GlobalSign CAPlugin enables the Synchronization, Enrollment, and Revocation of TLS Certificates from the GlobalSign Certificate Center.
 
 ## Compatibility
@@ -41,7 +40,7 @@ The GlobalSign CAPlugin enables the Synchronization, Enrollment, and Revocation 
 The GlobalSign MSSL AnyCA Gateway REST plugin is compatible with the Keyfactor AnyCA Gateway REST 25.2.0 and later.
 
 ## Support
-The GlobalSign MSSL AnyCA Gateway REST plugin is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket with your Keyfactor representative. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com. 
+The GlobalSign MSSL AnyCA Gateway REST plugin is supported by Keyfactor for Keyfactor customers. If you have a support issue, please open a support ticket via the Keyfactor Support Portal at https://support.keyfactor.com.
 
 > To report a problem or suggest a new feature, use the **[Issues](../../issues)** tab. If you want to contribute actual bug fixes or proposed enhancements, use the **[Pull requests](../../pulls)** tab.
 
@@ -62,16 +61,16 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 2. On the server hosting the AnyCA Gateway REST, download and unzip the latest [GlobalSign MSSL AnyCA Gateway REST plugin](https://github.com/Keyfactor/globalsign-mssl-caplugin/releases/latest) from GitHub.
 
-3. Copy the unzipped directory (usually called `net6.0` or `net8.0`) to the Extensions directory:
+3. Copy the unzipped directory (usually called `net8.0` or `net10.0`) to the Extensions directory:
 
 
     ```shell
     Depending on your AnyCA Gateway REST version, copy the unzipped directory to one of the following locations:
-    Program Files\Keyfactor\AnyCA Gateway\AnyGatewayREST\net6.0\Extensions
     Program Files\Keyfactor\AnyCA Gateway\AnyGatewayREST\net8.0\Extensions
+    Program Files\Keyfactor\AnyCA Gateway\AnyGatewayREST\net10.0\Extensions
     ```
 
-    > The directory containing the GlobalSign MSSL AnyCA Gateway REST plugin DLLs (`net6.0` or `net8.0`) can be named anything, as long as it is unique within the `Extensions` directory.
+    > The directory containing the GlobalSign MSSL AnyCA Gateway REST plugin DLLs (`net8.0` or `net10.0`) can be named anything, as long as it is unique within the `Extensions` directory.
 
 4. Restart the AnyCA Gateway REST service.
 
@@ -91,20 +90,20 @@ This extension uses the contact information of the GCC Domain point of contact f
 
         Populate using the configuration fields collected in the [requirements](#requirements) section.
 
-        * **GlobalSignUsername** - GlobalSign MSSL API Username 
-        * **GlobalSignPassword** - GlobalSign MSSL API Password 
-        * **DateFormatString** - Date format string. Default is yyyy-MM-ddTHH:mm:ss.fffZ 
-        * **OrderAPIProdURL** - MSSL Order Prod API URL. Default is https://system.globalsign.com/kb/ws/v2/ManagedSSLService 
-        * **OrderAPITestURL** - MSSL Order Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v2/ManagedSSLService 
-        * **QueryAPIProdURL** - MSSL Query Prod API URL. Default is https://system.globalsign.com/kb/ws/v1/GASService 
-        * **QueryAPITestURL** - MSSL Query Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v1/GASService 
-        * **TestAPI** - Enable the use of the test GlobalSign API endpoints. Default is false. 
-        * **DelayTime** - This is the number of seconds between retries when attempting to download a certificate. Default is 150. 
-        * **RetryCount** - This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5. 
-        * **SyncIntervalDays** - OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments. 
-        * **SyncStartDate** - If provided, full syncs will start at the specified date. 
-        * **SyncProducts** - OPTIONAL: If provided as a comma-separated list of product IDs, will limit the certificate sync to only certificates of those products. If blank or not provided, will sync all certs. 
-        * **Enabled** - Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available. 
+        * **GlobalSignUsername** - GlobalSign MSSL API Username
+        * **GlobalSignPassword** - GlobalSign MSSL API Password
+        * **DateFormatString** - Date format string. Default is yyyy-MM-ddTHH:mm:ss.fffZ
+        * **OrderAPIProdURL** - MSSL Order Prod API URL. Default is https://system.globalsign.com/kb/ws/v2/ManagedSSLService
+        * **OrderAPITestURL** - MSSL Order Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v2/ManagedSSLService
+        * **QueryAPIProdURL** - MSSL Query Prod API URL. Default is https://system.globalsign.com/kb/ws/v1/GASService
+        * **QueryAPITestURL** - MSSL Query Test API URL. Default is https://test-gcc.globalsign.com/kb/ws/v1/GASService
+        * **TestAPI** - Enable the use of the test GlobalSign API endpoints. Default is false.
+        * **DelayTime** - This is the number of seconds between retries when attempting to download a certificate. Default is 150.
+        * **RetryCount** - This is the number of times the AnyGateway will attempt to pickup an new certificate before reporting an error. Default is 5.
+        * **SyncIntervalDays** - OPTIONAL: Required if SyncStartDate is used. Specifies how to page the certificate sync. Should be a value such that no interval of that length contains > 500 certificate enrollments.
+        * **SyncStartDate** - If provided, full syncs will start at the specified date.
+        * **SyncProducts** - OPTIONAL: If provided as a comma-separated list of product IDs, will limit the certificate sync to only certificates of those products. If blank or not provided, will sync all certs.
+        * **Enabled** - Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available.
 
 2. Define [Certificate Profiles](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCP-Gateway.htm) and [Certificate Templates](https://software.keyfactor.com/Guides/AnyCAGatewayREST/Content/AnyCAGatewayREST/AddCA-Gateway.htm) for the Certificate Authority as required. One Certificate Profile must be defined per Certificate Template. It's recommended that each Certificate Profile be named after the Product ID. The GlobalSign MSSL plugin supports the following product IDs:
 
@@ -122,16 +121,22 @@ This extension uses the contact information of the GCC Domain point of contact f
 
 4. In Keyfactor Command (v12.3+), for each imported Certificate Template, follow the [official documentation](https://software.keyfactor.com/Core-OnPrem/Current/Content/ReferenceGuide/Configuring%20Template%20Options.htm) to define enrollment fields for each of the following parameters:
 
-    * **CertificateValidityInYears** - Number of years the certificate will be valid for 
-    * **SlotSize** - Maximum number of SANs that a certificate may have - valid values are [FIVE, TEN, FIFTEEN, TWENTY, THIRTY, FOURTY, FIFTY, ONE_HUNDRED] 
-    * **RootCAType** - The certificate's root CA - Depending on certificate expiration date, SHA_1 not be allowed. Will default to SHA_2 if expiration date exceeds sha1 allowed date. Options are GlobalSign R certs. 
-    * **MSSLProfileId** - OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com). 
-    * **ContactName** - The name of the contact to use for enrollments. Can be specified here or via an Enrollment Field in Command. Enrollment Fields will override any value supplied here. 
-
+    * **CertificateValidityInYears** - Number of years the certificate will be valid for
+    * **SlotSize** - Maximum number of SANs that a certificate may have - valid values are [FIVE, TEN, FIFTEEN, TWENTY, THIRTY, FOURTY, FIFTY, ONE_HUNDRED]
+    * **RootCAType** - The certificate's root CA - Depending on certificate expiration date, SHA_1 not be allowed. Will default to SHA_2 if expiration date exceeds sha1 allowed date. Options are GlobalSign R certs.
+    * **MSSLProfileId** - OPTIONAL: If specified, enrollments will use that profile ID for domain lookups. If not provided, domain lookup will be done based on the Common Name or first DNS SAN. Useful if your GlobalSign account has multiple domain objects with the same domain string, or subdomains (e.g. sub.test.com vs test.com).
+    * **ContactName** - The name of the contact to use for enrollments. Can be specified here or via an Enrollment Field in Command. Enrollment Fields will override any value supplied here.
 
 ## Valid GlobalSign SAN Usage
 GlobalSign supports specific combinations of SAN types with certain GlobalSign products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
 Please refer to the GlobalSign documentation for more information on SAN usage:  [GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
+
+### Automated DNS Domain Validation
+This plugin integrates with the AnyCA Gateway **DNS provider plugin framework** (`KeyfactorAnyGateway.IAnyCAPlugin` 3.3.0+). DNS provider plugins (Azure DNS, AWS Route53, Cloudflare, Google Cloud DNS, etc.) are deployed and configured **separately** on the gateway; this CA plugin does not bundle any DNS provider SDKs. The gateway injects an `IDomainValidatorFactory` that resolves the correct provider for each domain at enrollment time.
+
+GlobalSign supports **TXT** records for DNS validation.
+
+`DnsValidationEnabled` determines whether to use the automated validation. Make sure you have the necessary DNS plugins installed and configured before enabling.
 
 ## Enrollment
 
@@ -149,7 +154,6 @@ The following fields are available for use in the enrollment of `PV_INTRA` Certi
     - **RequesterEmail**: Set Data Type to 'string' when creating the field. The contact email address for the enrollment. Required by the GlobalSign API.
     - **RequesterTel**: Set Data Type to 'string' when creating the field. The contact telephone number for the enrollment. Required by the GlobalSign API.
 - **InternalIP**: Set Data Type to 'string' when creating the field. Set to `true` if an IP SAN attached during a `PV_INTRA` certificate enrollment is a private IP address (e.g., `10.x.x.x`, `192.168.x.x`, etc.).
-
 
 ## License
 
