@@ -409,6 +409,11 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 						Logger.LogTrace(sb.ToString());
 					}
 				}
+				else
+				{
+					sb.AppendLine("No MSSLProfileID provided, unable to determine correct domain");
+					Logger.LogTrace(sb.ToString());
+				}
 			}
 
 
