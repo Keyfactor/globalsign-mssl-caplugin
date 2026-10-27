@@ -20,13 +20,20 @@ namespace Keyfactor.Extensions.CAPlugin.GlobalSign;
 
 public class GlobalSignCAPlugin : IAnyCAPlugin
 {
-    private ICertificateDataReader? _certificateDataReader; 
-    private ILogger Logger;
+    private ICertificateDataReader? _certificateDataReader;
+	private ILogger Logger = LogHandler.GetClassLogger<GlobalSignCAPlugin>();
 
     private GlobalSignCAConfig Config { get; set; } = new();
     private bool _enabled = false;
+	private readonly IDomainValidatorFactory DomainValidatorFactory;
 
-    public void Initialize(IAnyCAPluginConfigProvider configProvider, ICertificateDataReader certificateDataReader)
+	public GlobalSignCAPlugin(IDomainValidatorFactory domainValidatorFactory)
+	{
+		DomainValidatorFactory = domainValidatorFactory;
+	}
+
+
+	public void Initialize(IAnyCAPluginConfigProvider configProvider, ICertificateDataReader certificateDataReader)
     {
         Logger = LogHandler.GetClassLogger(GetType());
         Logger.MethodEntry();
@@ -57,8 +64,9 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             SyncIntervalDays = configProvider.CAConnectionData.TryGetValue("SyncIntervalDays", out var val)
                                && int.TryParse(val as string, out var parsed)
                 ? parsed
-                : 0
-        };
+                : 0,
+			DnsValidationEnabled = bool.Parse((string)configProvider.CAConnectionData["DnsValidationEnabled"])
+		};
         _certificateDataReader = certificateDataReader;
         Logger.MethodExit();
     }
@@ -239,8 +247,8 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
             var allDomains = await apiClient.GetDomains();
             var validDomainStatus = new List<string> { "3", "7", "9", "10" };
             var validDomains = allDomains.Where(d => validDomainStatus.Contains(d.DomainStatus)).ToList();
-            if (validDomains.Count == 0 && !privateDomain)
-                throw new Exception("No domains found that are valid for certificate enrollment");
+            //if (validDomains.Count == 0 && !privateDomain)
+            //    throw new Exception("No domains found that are valid for certificate enrollment");
             try
             {
                 commonName = ParseSubject(subject, "CN=");
@@ -380,11 +388,23 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 														d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 					if (tempDomain != null)
 					{
-						domain = tempDomain;
+						sb.AppendLine($"Comparing ProfileID to provided MSSLProfileID: {profId}");
+						Logger.LogTrace(sb.ToString());
+						var tempDomain = matchedDomains.Where(d =>
+															d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+						if (tempDomain != null)
+						{
+							domain = tempDomain;
+						}
+						else
+						{
+							throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
+						}
 					}
 					else
 					{
-						throw new Exception($"No domain matching common name {commonName} has provided MSSLProfileID of {profId}. Check configuration.");
+						sb.AppendLine("No MSSLProfileID provided, unable to determine correct domain");
+						Logger.LogTrace(sb.ToString());
 					}
 				}
 				else
@@ -397,9 +417,59 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 
 			if (domain == null) throw new Exception("Unable to determine GlobalSign domain");
 
-            
+            if (!string.Equals(domain.DomainStatus, "3") && !privateDomain)
+			{
+				if (!Config.DnsValidationEnabled)
+				{
+					if (!validDomainStatus.Contains(domain.DomainStatus))
+					{
+						throw new Exception($"Domain {domain.DomainName} is not valid for certificate enrollment, and DNS validation is disabled");
+					}
+					else
+					{
+						// Domain is still valid for enrollment but is pending re-validation. Do nothing if DnsValidationEnabled is false.
+					}
+				}
+				else
+				{
+					var request = new GlobalSignRenewDomainRequest(Config)
+					{
+						MsslProfileId = domain.MSSLProfileID,
+						DomainId = domain.DomainID
+					};
+					var dnsTxt = await apiClient.RenewDomain(request);
 
-            Logger.LogDebug(
+					IDomainValidator validator;
+					try
+					{
+						validator = DomainValidatorFactory.ResolveDomainValidator(domain.DomainName, "dns-01");
+					}
+					catch (Exception ex)
+					{
+						Logger.LogError($"Failed to resolve domain validator for domain {domain.DomainName}: {ex.Message}");
+						throw new Exception($"Failed to resolve domain validator for domain {domain.DomainName}: {ex.Message}", ex);
+					}
+
+					DomainValidationResult domValResult = null;
+					domValResult = await validator.StageValidation(domain.DomainName, dnsTxt, CancellationToken.None);
+
+					if (domValResult == null || !domValResult.Success)
+					{
+						var msg = domValResult?.ErrorMessage ?? "unknown error";
+						Logger.LogError(msg);
+						throw new Exception(msg);
+					}
+
+					var verifyRequest = new GlobalSignVerifyDomainRequest(Config)
+					{
+						DomainId = domain.DomainID,
+						DomainName = domain.DomainName
+					};
+					var verifyResult = await apiClient.VerifyDomain(verifyRequest);
+				}
+			}
+
+			Logger.LogDebug(
                 $"Domain info:\nDomain Name: {domain?.DomainName}\nMsslDomainId: {domain?.DomainID}\nMsslProfileId: {domain?.MSSLProfileID}");
             Logger.LogDebug($"Using common name: {commonName}");
             var months = (int.Parse(productInfo.ProductParameters["CertificateValidityInYears"]) * 12).ToString();
@@ -713,6 +783,16 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 				DefaultValue = null,
 				Type = "String"
             },
+			[Constants.DNS_VALIDATION_ENABLED] = new()
+			{
+				Comments = "Enable automated DNS (TXT record) domain control validation. When enabled, the plugin " +
+							"requests TXT-based validation from GlobalSign and publishes the returned record via the " +
+							"DNS provider plugin resolved by the AnyCA Gateway. Requires a DNS provider plugin (e.g. Azure, " +
+							"Cloudflare, etc) to be deployed and configured on the gateway.",
+				Hidden = false,
+				DefaultValue = false,
+				Type = "Boolean"
+			},
             [Constants.Enabled] = new()
             {
                 Comments = "Flag to Enable or Disable gateway functionality. Disabling is primarily used to allow creation of the CA prior to configuration information being available.",

@@ -325,6 +325,48 @@ public class GlobalSignApiClient
         throw new Exception(gsError.Message);
     }
 
+	public async Task<string> RenewDomain(GlobalSignRenewDomainRequest request)
+	{
+		Logger.MethodEntry();
+		var rawRequest = request.Request;
+		Logger.LogTrace($"Renew Domain request details:");
+		Logger.LogTrace($"Profile ID: {rawRequest.MSSLProfileID}");
+		Logger.LogTrace($"Domain ID: {rawRequest.DomainID}");
+		var responsewrapper = await OrderService.RenewalDomainAsync(new RenewalDomain(rawRequest));
+		var response = responsewrapper.Response;
+		if (response.OrderResponseHeader.SuccessCode == 0)
+		{
+			Logger.LogDebug("Renewal domain request successfully submitted");
+			Logger.MethodExit();
+			return response.DnsTXT;
+		}
+		var errorCode = int.Parse(response.OrderResponseHeader.Errors[0].ErrorCode);
+		var err = GlobalSignErrorIndex.GetGlobalSignError(errorCode);
+		Logger.MethodExit();
+		throw new Exception($"Error while attempting to renew domain: {err.DetailedMessage}");
+	}
+
+	public async Task<bool> VerifyDomain(GlobalSignVerifyDomainRequest request)
+	{
+		Logger.MethodEntry();
+		var rawRequest = request.Request;
+		Logger.LogTrace($"Verify Domain request details:");
+		Logger.LogTrace($"Domain Name: {rawRequest.TagLocation}");
+		Logger.LogTrace($"Domain ID: {rawRequest.DomainID}");
+		var responsewrapper = await OrderService.VerifyMsslDomainAsync(new VerifyMsslDomain(rawRequest));
+		var response = responsewrapper.Response;
+		if (response.OrderResponseHeader.SuccessCode == 0)
+		{
+			Logger.LogDebug("Verify domain request successful");
+			Logger.MethodExit();
+			return true;
+		}
+		var errorCode = int.Parse(response.OrderResponseHeader.Errors[0].ErrorCode);
+		var err = GlobalSignErrorIndex.GetGlobalSignError(errorCode);
+		Logger.MethodExit();
+		throw new Exception($"Error while attempting to verify domain: {err.DetailedMessage}");
+	}
+
     public async Task<EnrollmentResult> Enroll(GlobalSignEnrollRequest enrollRequest)
     {
         Logger.MethodEntry();
