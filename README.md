@@ -131,6 +131,9 @@ This extension uses the contact information of the GCC Domain point of contact f
 GlobalSign supports specific combinations of SAN types with certain GlobalSign products. For example, a Private IP can only be used as a SAN with a `PV_INTRA` Certificate.  
 Please refer to the GlobalSign documentation for more information on SAN usage:  [GlobalSign MSSL API User Guide (Section 2.2.5)](https://www.globalsign.com/en/repository/globalsign-mssl-api-user-guide.pdf)
 
+### Automated DNS Domain Validation
+This plugin integrates with the AnyCA Gateway **DNS provider plugin framework** (`KeyfactorAnyGateway.IAnyCAPlugin` 3.3.0+). DNS provider plugins (Azure DNS, AWS Route53, Cloudflare, Google Cloud DNS, etc.) are deployed and configured **separately** on the gateway; this CA plugin does not bundle any DNS provider SDKs. The gateway injects an `IDomainValidatorFactory` that resolves the correct provider for each domain at enrollment time.
+
 ## Enrollment
 
 ### Required Enrollment Fields
