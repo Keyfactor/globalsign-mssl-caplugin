@@ -288,7 +288,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 						if (string.IsNullOrWhiteSpace(ipSan))
 							continue;
 
-						var tempDomains = allDomains
+						var tempDomains = validDomains
 							.Where(d =>
 								!string.IsNullOrEmpty(d?.DomainName) &&
 								ipSan.EndsWith($".{d.DomainName}", StringComparison.OrdinalIgnoreCase)
@@ -310,7 +310,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 						if (string.IsNullOrWhiteSpace(dnsSan))
 							continue;
 
-						var tempDomains = allDomains
+						var tempDomains = validDomains
 							.Where(d =>
 								!string.IsNullOrEmpty(d?.DomainName) &&
 								dnsSan.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
@@ -349,7 +349,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 			// 3) Fallback: if we did obtain a commonName (or it was already set), try matching it
 			else if (domain == null && !string.IsNullOrWhiteSpace(commonName))
 			{
-				matchedDomains = allDomains
+				matchedDomains = validDomains
 					.Where(d =>
 						!string.IsNullOrEmpty(d?.DomainName) &&
 						commonName.EndsWith(d.DomainName, StringComparison.OrdinalIgnoreCase)
@@ -364,7 +364,7 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 			{
 				StringBuilder stringBuilder = new StringBuilder();
 				stringBuilder.AppendLine($"No domains found matching common name {commonName}\nAll domains:");
-				foreach (var dm in allDomains)
+				foreach (var dm in validDomains)
 				{
 					stringBuilder.AppendLine($"Domain: {dm.DomainName}\tProfileID: {dm.MSSLProfileID}");
 				}
@@ -372,23 +372,21 @@ public class GlobalSignCAPlugin : IAnyCAPlugin
 			}
 			else
 			{
-				var validMatchedDomains = matchedDomains.FindAll(d => validDomains.Contains(d)).ToList();
-				matchedDomains = validMatchedDomains;
-				if (matchedDomains.Count == 1)
+				StringBuilder sb = new StringBuilder();
+				sb.AppendLine($"Domains found matching common name {commonName}:");
+				foreach (var dom in matchedDomains)
 				{
-					domain = matchedDomains[0];
+					sb.AppendLine($"Domain: {dom.DomainName}\tProfileID: {dom.MSSLProfileID}");
 				}
-				else
+				//Logger.LogTrace($"Multiple domains found matching common name {commonName}:\n{string.Join(',', matchedDomains.Select(d => d.DomainName))}.\nChecking for Profile ID.");
+				var profId = productInfo.ProductParameters["MSSLProfileID"];
+				if (!string.IsNullOrEmpty(profId))
 				{
-					StringBuilder sb = new StringBuilder();
-					sb.AppendLine($"Domains found matching common name {commonName}:");
-					foreach (var dom in matchedDomains)
-					{
-						sb.AppendLine($"Domain: {dom.DomainName}\tProfileID: {dom.MSSLProfileID}");
-					}
-					//Logger.LogTrace($"Multiple domains found matching common name {commonName}:\n{string.Join(',', matchedDomains.Select(d => d.DomainName))}.\nChecking for Profile ID.");
-					var profId = productInfo.ProductParameters["MSSLProfileID"];
-					if (!string.IsNullOrEmpty(profId))
+					sb.AppendLine($"Comparing ProfileID to provided MSSLProfileID: {profId}");
+					Logger.LogTrace(sb.ToString());
+					var tempDomain = matchedDomains.Where(d =>
+														d.MSSLProfileID.Equals(profId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+					if (tempDomain != null)
 					{
 						sb.AppendLine($"Comparing ProfileID to provided MSSLProfileID: {profId}");
 						Logger.LogTrace(sb.ToString());

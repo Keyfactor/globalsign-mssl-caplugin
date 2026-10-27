@@ -36,9 +36,9 @@ public static class OrderStatus
             case GlobalSignOrderStatus.Revoking:
                 return (int)EndEntityStatus.REVOKED;
             case GlobalSignOrderStatus.PendingApproval:
-                return (int)EndEntityStatus.WAITINGFORADDAPPROVAL;
+                return (int)EndEntityStatus.EXTERNALVALIDATION;
             case GlobalSignOrderStatus.Waiting:
-                return (int)EndEntityStatus.INPROCESS;
+                return (int)EndEntityStatus.EXTERNALVALIDATION;
             case GlobalSignOrderStatus.Initial:
                 return (int)EndEntityStatus.INITIALIZED;
             case GlobalSignOrderStatus.Denied:

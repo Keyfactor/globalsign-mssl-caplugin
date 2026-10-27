@@ -26,10 +26,6 @@ Please refer to the GlobalSign documentation for more information on SAN usage: 
 ### Automated DNS Domain Validation
 This plugin integrates with the AnyCA Gateway **DNS provider plugin framework** (`KeyfactorAnyGateway.IAnyCAPlugin` 3.3.0+). DNS provider plugins (Azure DNS, AWS Route53, Cloudflare, Google Cloud DNS, etc.) are deployed and configured **separately** on the gateway; this CA plugin does not bundle any DNS provider SDKs. The gateway injects an `IDomainValidatorFactory` that resolves the correct provider for each domain at enrollment time.
 
-GlobalSign supports **TXT** records for DNS validation.
-
-`DnsValidationEnabled` determines whether to use the automated validation. Make sure you have the necessary DNS plugins installed and configured before enabling.
-
 ## Enrollment
 
 ### Required Enrollment Fields
